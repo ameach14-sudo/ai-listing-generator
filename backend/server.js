@@ -16,7 +16,7 @@ const LENGTH_GUIDE = {
 };
 
 app.post('/api/generate', async (req, res) => {
-  const { type, price, beds, baths, sqft, year, neighborhood, features, tone, length } = req.body;
+  const { type, price, beds, baths, sqft, year, neighborhood, features, tone, length, styleReference, notes } = req.body;
 
   if (!features) {
     return res.status(400).json({ error: 'Features are required.' });
@@ -43,6 +43,8 @@ Guidelines:
 - Lead with the most compelling feature
 - Write in third person, present tense
 - Output only the listing description — no title, no commentary, no formatting
+${styleReference ? `\nStyle Reference — match the tone, voice, and structure of this example listing:\n"${styleReference}"` : ''}
+${notes ? `\nAdditional Instructions: ${notes}` : ''}
 
 Property Details:
 ${details}`;

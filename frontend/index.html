@@ -339,6 +339,22 @@
     </div>
   </div>
 
+  <div class="card">
+    <h2>Style Reference <span style="color:var(--muted);font-size:0.7rem;text-transform:none;letter-spacing:0;font-weight:400;">(optional)</span></h2>
+    <div class="field">
+      <label>Paste a listing you love — AI will match its tone</label>
+      <textarea id="style-reference" placeholder="Paste an example listing description here..." style="min-height:100px;"></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Additional Notes <span style="color:var(--muted);font-size:0.7rem;text-transform:none;letter-spacing:0;font-weight:400;">(optional)</span></h2>
+    <div class="field">
+      <label>Anything specific to include, adjust, or emphasize</label>
+      <textarea id="notes" placeholder="e.g. Mention the school district, keep it under 150 words, emphasize the backyard..."></textarea>
+    </div>
+  </div>
+
   <button class="generate-btn" id="generate-btn">Generate Listing Description</button>
 
   <div class="output-card" id="output-card">
@@ -384,6 +400,8 @@
         features: document.getElementById('features').value.trim(),
         tone: selectedTone,
         length: selectedLength,
+        styleReference: document.getElementById('style-reference').value.trim(),
+        notes: document.getElementById('notes').value.trim(),
       };
 
       if (!payload.features) {
