@@ -69,7 +69,7 @@ const EXTRA_PROMPTS = {
 
 Guidelines:
 - Conversational, energetic tone
-- 3-5 sentences max
+- Caption must be 150-250 characters (not counting hashtags) — short enough to read at a glance
 - End with 8-10 relevant hashtags on a new line
 - Output only the post — no commentary
 
@@ -81,8 +81,9 @@ Guidelines:
 - Include a subject line on the first line, formatted as: Subject: ...
 - Leave a blank line, then write the email body
 - Warm, professional tone
-- 3-4 short paragraphs
-- End with a call to action to schedule a showing
+- 200-250 words total for the email body
+- 3 short paragraphs max
+- End with a clear call to action to schedule a showing
 - Sign off with [Agent Name] as a placeholder
 - Output only the subject line and email — no commentary
 
@@ -91,9 +92,9 @@ Listing Description:
   zillow: `You are a real estate copywriter. Based on the listing description below, write an optimized version for listing sites like Zillow, Realtor.com, and Redfin.
 
 Guidelines:
-- Under 250 words
-- Lead with the most searchable, buyer-friendly highlights
-- Use natural language that performs well in search
+- 300-400 characters maximum — listing sites truncate long descriptions
+- Lead with the 2-3 most buyer-friendly highlights
+- Use natural, searchable language
 - No fluff or filler phrases
 - Output only the description — no commentary
 
@@ -108,9 +109,10 @@ app.post('/api/extra', async (req, res) => {
   }
 
   try {
+    const maxTokens = { social: 150, email: 400, zillow: 100 };
     const message = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 600,
+      max_tokens: maxTokens[type] || 300,
       messages: [{ role: 'user', content: EXTRA_PROMPTS[type] + description }],
     });
     res.json({ content: message.content[0].text.trim() });
