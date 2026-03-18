@@ -368,6 +368,23 @@
     </div>
     <div id="output-text"></div>
     <button class="copy-btn" id="regen-btn" style="margin-top:16px;width:100%;padding:10px;display:none;">Regenerate</button>
+
+    <div id="extras-section" style="display:none;margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+      <p style="font-size:0.75rem;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;">Generate More from This Listing</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+        <button class="tone-btn" id="btn-social">Social Post</button>
+        <button class="tone-btn" id="btn-email">Email Template</button>
+        <button class="tone-btn" id="btn-zillow">Listing Site Version</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="output-card" id="extra-card" style="display:none;margin-top:16px;">
+    <div class="output-header">
+      <h2 id="extra-title">Social Post</h2>
+      <button class="copy-btn" id="extra-copy-btn">Copy</button>
+    </div>
+    <div id="extra-text"></div>
   </div>
 
   <script>
@@ -481,12 +498,68 @@
         const words = data.description.trim().split(/\s+/).length;
         document.getElementById('word-count').textContent = `${words} words`;
         document.getElementById('regen-btn').style.display = 'block';
+        document.getElementById('extras-section').style.display = 'block';
+        document.getElementById('extra-card').style.display = 'none';
+        lastDescription = data.description;
       } catch (err) {
         outputText.innerHTML = `<div class="error-msg">Error: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
         btn.textContent = 'Generate Listing Description';
       }
+    });
+
+    let lastDescription = '';
+
+    async function generateExtra(type, title) {
+      if (getCount() >= FREE_LIMIT) {
+        const extraCard = document.getElementById('extra-card');
+        const extraText = document.getElementById('extra-text');
+        extraCard.style.display = 'block';
+        extraText.innerHTML = `<div class="error-msg" style="text-align:center;padding:20px;line-height:1.8;">
+          You've used your 3 free generations.<br><br>
+          <strong style="color:var(--text);">Want full access?</strong><br>
+          Email <a href="mailto:a.meach14@gmail.com" style="color:var(--accent);">a.meach14@gmail.com</a>
+        </div>`;
+        return;
+      }
+
+      const extraCard = document.getElementById('extra-card');
+      const extraText = document.getElementById('extra-text');
+      const extraTitle = document.getElementById('extra-title');
+      extraCard.style.display = 'block';
+      extraTitle.textContent = title;
+      extraText.innerHTML = '<div class="loading"><div class="spinner"></div> Writing...</div>';
+      extraCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      try {
+        const res = await fetch('/api/extra', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ description: lastDescription, type }),
+        });
+        if (!res.ok) throw new Error('Server error');
+        const data = await res.json();
+        extraText.textContent = data.content;
+        incrementCount();
+        updateCounter();
+      } catch (err) {
+        extraText.innerHTML = `<div class="error-msg">Error: ${err.message}</div>`;
+      }
+    }
+
+    document.getElementById('btn-social').addEventListener('click', () => generateExtra('social', 'Social Post'));
+    document.getElementById('btn-email').addEventListener('click', () => generateExtra('email', 'Email Template'));
+    document.getElementById('btn-zillow').addEventListener('click', () => generateExtra('zillow', 'Listing Site Version'));
+
+    document.getElementById('extra-copy-btn').addEventListener('click', () => {
+      const text = document.getElementById('extra-text').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('extra-copy-btn');
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+      });
     });
 
     // Regenerate

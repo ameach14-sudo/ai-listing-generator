@@ -64,6 +64,62 @@ ${details}`;
   }
 });
 
+const EXTRA_PROMPTS = {
+  social: `You are a real estate social media expert. Based on the listing description below, write an engaging Instagram/Facebook post for a real estate agent.
+
+Guidelines:
+- Conversational, energetic tone
+- 3-5 sentences max
+- End with 8-10 relevant hashtags on a new line
+- Output only the post — no commentary
+
+Listing Description:
+`,
+  email: `You are a real estate copywriter. Based on the listing description below, write a "Just Listed" email a real estate agent can send to their database.
+
+Guidelines:
+- Include a subject line on the first line, formatted as: Subject: ...
+- Leave a blank line, then write the email body
+- Warm, professional tone
+- 3-4 short paragraphs
+- End with a call to action to schedule a showing
+- Sign off with [Agent Name] as a placeholder
+- Output only the subject line and email — no commentary
+
+Listing Description:
+`,
+  zillow: `You are a real estate copywriter. Based on the listing description below, write an optimized version for listing sites like Zillow, Realtor.com, and Redfin.
+
+Guidelines:
+- Under 250 words
+- Lead with the most searchable, buyer-friendly highlights
+- Use natural language that performs well in search
+- No fluff or filler phrases
+- Output only the description — no commentary
+
+Listing Description:
+`,
+};
+
+app.post('/api/extra', async (req, res) => {
+  const { description, type } = req.body;
+  if (!description || !EXTRA_PROMPTS[type]) {
+    return res.status(400).json({ error: 'Invalid request.' });
+  }
+
+  try {
+    const message = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 600,
+      messages: [{ role: 'user', content: EXTRA_PROMPTS[type] + description }],
+    });
+    res.json({ content: message.content[0].text.trim() });
+  } catch (err) {
+    console.error('Anthropic error:', err.message);
+    res.status(500).json({ error: 'Failed to generate. Please try again.' });
+  }
+});
+
 // Fallback — serve frontend for all other routes
 app.get('/{*path}', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
