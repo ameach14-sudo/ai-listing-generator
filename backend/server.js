@@ -63,7 +63,7 @@ ${details}`;
 });
 
 // Fallback — serve frontend for all other routes
-app.get('*', (req, res) => {
+app.get('/{*path}', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
