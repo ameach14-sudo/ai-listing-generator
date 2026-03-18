@@ -388,7 +388,7 @@
   </div>
 
   <script>
-    const FREE_LIMIT = 3;
+    const FREE_LIMIT = 10;
 
     function getCount() { return parseInt(localStorage.getItem('gen_count') || '0'); }
     function incrementCount() { localStorage.setItem('gen_count', getCount() + 1); }
@@ -444,7 +444,7 @@
         const outputText = document.getElementById('output-text');
         outputCard.classList.add('visible');
         outputText.innerHTML = `<div class="error-msg" style="text-align:center;padding:20px;line-height:1.8;">
-          You've used your 3 free generations.<br><br>
+          You've used your 10 free generations.<br><br>
           <strong style="color:var(--text);">Want full access?</strong><br>
           Email <a href="mailto:a.meach14@gmail.com" style="color:var(--accent);">a.meach14@gmail.com</a>
         </div>`;
@@ -517,7 +517,7 @@
         const extraText = document.getElementById('extra-text');
         extraCard.style.display = 'block';
         extraText.innerHTML = `<div class="error-msg" style="text-align:center;padding:20px;line-height:1.8;">
-          You've used your 3 free generations.<br><br>
+          You've used your 10 free generations.<br><br>
           <strong style="color:var(--text);">Want full access?</strong><br>
           Email <a href="mailto:a.meach14@gmail.com" style="color:var(--accent);">a.meach14@gmail.com</a>
         </div>`;
