@@ -339,19 +339,19 @@
     </div>
   </div>
 
-  <div class="card">
-    <h2>Style Reference <span style="color:var(--muted);font-size:0.7rem;text-transform:none;letter-spacing:0;font-weight:400;">(optional)</span></h2>
-    <div class="field">
-      <label>Paste a listing you love — AI will match its tone</label>
-      <textarea id="style-reference" placeholder="Paste an example listing description here..." style="min-height:100px;"></textarea>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>Additional Notes <span style="color:var(--muted);font-size:0.7rem;text-transform:none;letter-spacing:0;font-weight:400;">(optional)</span></h2>
-    <div class="field">
-      <label>Anything specific to include, adjust, or emphasize</label>
-      <textarea id="notes" placeholder="e.g. Mention the school district, keep it under 150 words, emphasize the backyard..."></textarea>
+  <div style="max-width:640px;margin:0 auto 24px;">
+    <button id="advanced-toggle" style="background:none;border:none;color:var(--muted);font-size:0.85rem;cursor:pointer;padding:0;display:flex;align-items:center;gap:6px;font-family:inherit;">
+      <span id="advanced-arrow" style="font-size:0.7rem;">▶</span> Advanced options
+    </button>
+    <div id="advanced-panel" style="display:none;margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;display:none;">
+      <div class="field" style="margin-bottom:16px;">
+        <label>Style Reference — paste a listing you love, AI will match its tone</label>
+        <textarea id="style-reference" placeholder="Paste an example listing description here..." style="min-height:90px;"></textarea>
+      </div>
+      <div class="field">
+        <label>Additional Notes — anything specific to include or adjust</label>
+        <textarea id="notes" placeholder="e.g. Mention the school district, keep it punchy, emphasize the backyard..."></textarea>
+      </div>
     </div>
   </div>
 
@@ -406,6 +406,15 @@
     });
 
     updateCounter();
+
+    // Advanced toggle
+    document.getElementById('advanced-toggle').addEventListener('click', () => {
+      const panel = document.getElementById('advanced-panel');
+      const arrow = document.getElementById('advanced-arrow');
+      const open = panel.style.display === 'block';
+      panel.style.display = open ? 'none' : 'block';
+      arrow.textContent = open ? '▶' : '▼';
+    });
 
     // Generate
     document.getElementById('generate-btn').addEventListener('click', async () => {
