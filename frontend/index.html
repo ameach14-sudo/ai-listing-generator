@@ -361,9 +361,13 @@
   <div class="output-card" id="output-card">
     <div class="output-header">
       <h2>Your Listing Description</h2>
-      <button class="copy-btn" id="copy-btn">Copy</button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span id="word-count" style="font-size:0.75rem;color:var(--muted);"></span>
+        <button class="copy-btn" id="copy-btn">Copy</button>
+      </div>
     </div>
     <div id="output-text"></div>
+    <button class="copy-btn" id="regen-btn" style="margin-top:16px;width:100%;padding:10px;display:none;">Regenerate</button>
   </div>
 
   <script>
@@ -425,7 +429,7 @@
         outputText.innerHTML = `<div class="error-msg" style="text-align:center;padding:20px;line-height:1.8;">
           You've used your 3 free generations.<br><br>
           <strong style="color:var(--text);">Want full access?</strong><br>
-          Reach out to Alex at <a href="mailto:a.meach14@gmail.com" style="color:var(--accent);">a.meach14@gmail.com</a>
+          Email <a href="mailto:a.meach14@gmail.com" style="color:var(--accent);">a.meach14@gmail.com</a>
         </div>`;
         return;
       }
@@ -474,12 +478,20 @@
         outputText.textContent = data.description;
         incrementCount();
         updateCounter();
+        const words = data.description.trim().split(/\s+/).length;
+        document.getElementById('word-count').textContent = `${words} words`;
+        document.getElementById('regen-btn').style.display = 'block';
       } catch (err) {
         outputText.innerHTML = `<div class="error-msg">Error: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
         btn.textContent = 'Generate Listing Description';
       }
+    });
+
+    // Regenerate
+    document.getElementById('regen-btn').addEventListener('click', () => {
+      document.getElementById('generate-btn').click();
     });
 
     // Copy
