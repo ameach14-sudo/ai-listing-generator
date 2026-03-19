@@ -455,7 +455,7 @@ app.get('/api/admin/stats', async (req, res) => {
       supabase.from('tool_usage').select('id', { count: 'exact', head: true }).eq('tool', 'visit'),
       supabase.rpc('get_by_tool'),
       supabase.rpc('get_top_visitors'),
-      supabase.from('tool_usage').select('tool, ip_address, location, is_admin, session_id, device, browser, referrer, visit_count, time_on_page, created_at').order('created_at', { ascending: false }).limit(20),
+      supabase.from('tool_usage').select('tool, ip_address, location, is_admin, session_id, device, browser, referrer, visit_count, time_on_page, created_at').order('created_at', { ascending: false }).limit(100),
       supabase.rpc('get_daily_counts'),
     ]);
 

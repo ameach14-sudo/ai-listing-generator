@@ -286,6 +286,46 @@
 
     .loading { color: var(--muted); font-size: 0.9rem; text-align: center; padding: 20px; }
 
+    .group-row { cursor: pointer; }
+    .group-row:hover td { background: rgba(200,168,107,0.04); }
+    .group-toggle { font-size: 0.75rem; color: var(--accent); margin-left: 6px; }
+    .group-badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      padding: 2px 7px;
+      border-radius: 20px;
+      background: rgba(200,168,107,0.15);
+      color: var(--accent);
+      font-weight: 700;
+      margin-left: 6px;
+    }
+    .sub-rows { display: none; }
+    .sub-rows.open { display: table-row-group; }
+    .sub-row td { background: rgba(255,255,255,0.02); font-size: 0.78rem; padding-left: 16px !important; border-bottom: 1px solid rgba(46,46,46,0.5); }
+    .sub-row:last-child td { border-bottom: 1px solid var(--border); }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .page-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.85rem;
+      padding: 6px 14px;
+      transition: all 0.15s;
+    }
+    .page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .page-info { font-size: 0.8rem; color: var(--muted); }
+
     .since-popup {
       display: none;
       position: fixed;
@@ -516,27 +556,91 @@
           </table>
         ` : '<p class="loading">No data yet.</p>';
 
-        // Recent activity
-        document.getElementById('recent-table').innerHTML = `
-          <div class="table-scroll"><table>
-            <thead><tr><th>Tool</th><th>Location</th><th>Device</th><th>Browser</th><th>Referrer</th><th>Visit #</th><th>Time on Page</th><th>Session</th><th>Type</th><th>Time</th></tr></thead>
-            <tbody>
-              ${data.recent.map(r => `
-                <tr>
-                  <td>${toolLabel(r.tool)}</td>
-                  <td class="muted">${r.location || r.ip_address || 'Unknown'}</td>
-                  <td class="muted">${r.device || '—'}</td>
-                  <td class="muted">${r.browser || '—'}</td>
-                  <td class="muted">${r.referrer || 'Direct'}</td>
-                  <td class="muted">${r.visit_count || '—'}</td>
-                  <td class="muted">${r.time_on_page != null ? r.time_on_page + 's' : '—'}</td>
-                  <td class="muted" style="font-size:0.75rem;">${r.session_id || '—'}</td>
-                  <td><span class="badge ${r.is_admin ? 'admin' : 'free'}">${r.is_admin ? 'Admin' : 'Free'}</span></td>
-                  <td class="muted">${formatDate(r.created_at)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table></div>
+        // Recent activity — group + paginate
+        const FIVE_MIN = 5 * 60 * 1000;
+        const PAGE_SIZE = 15;
+        let _page = 0;
+
+        function groupRows(rows) {
+          const groups = [];
+          for (const row of rows) {
+            const last = groups[groups.length - 1];
+            if (last && last.session_id && last.session_id === row.session_id &&
+                Math.abs(new Date(last.rows[0].created_at) - new Date(row.created_at)) < FIVE_MIN) {
+              last.rows.push(row);
+            } else {
+              groups.push({ session_id: row.session_id, rows: [row] });
+            }
+          }
+          return groups;
+        }
+
+        function rowHtml(r, indent) {
+          return `
+            <td${indent ? ' style="padding-left:24px;"' : ''}>${toolLabel(r.tool)}</td>
+            <td class="muted">${r.location || r.ip_address || 'Unknown'}</td>
+            <td class="muted">${r.device || '—'}</td>
+            <td class="muted">${r.browser || '—'}</td>
+            <td class="muted">${r.referrer || 'Direct'}</td>
+            <td class="muted">${r.visit_count || '—'}</td>
+            <td class="muted">${r.time_on_page != null ? r.time_on_page + 's' : '—'}</td>
+            <td class="muted" style="font-size:0.75rem;">${r.session_id || '—'}</td>
+            <td><span class="badge ${r.is_admin ? 'admin' : 'free'}">${r.is_admin ? 'Admin' : 'Free'}</span></td>
+            <td class="muted">${formatDate(r.created_at)}</td>
+          `;
+        }
+
+        function renderRecent(groups, page) {
+          const total = groups.length;
+          const totalPages = Math.ceil(total / PAGE_SIZE);
+          const slice = groups.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+          let groupIdx = 0;
+
+          const rows = slice.map(g => {
+            const id = 'grp-' + groupIdx++;
+            if (g.rows.length === 1) {
+              return `<tr>${rowHtml(g.rows[0], false)}</tr>`;
+            }
+            const subRows = g.rows.slice(1).map(r => `<tr class="sub-row">${rowHtml(r, true)}</tr>`).join('');
+            return `
+              <tr class="group-row" onclick="toggleGroup('${id}')">
+                ${rowHtml(g.rows[0], false).replace('</td>', `<span class="group-badge">${g.rows.length}</span><span class="group-toggle" id="${id}-arrow">▼</span></td>`)}
+              </tr>
+              <tbody class="sub-rows" id="${id}">${subRows}</tbody>
+            `;
+          }).join('');
+
+          const pagination = totalPages > 1 ? `
+            <div class="pagination">
+              <button class="page-btn" id="prev-btn" onclick="changePage(-1)" ${page === 0 ? 'disabled' : ''}>← Prev</button>
+              <span class="page-info">Page ${page + 1} of ${totalPages}</span>
+              <button class="page-btn" id="next-btn" onclick="changePage(1)" ${page >= totalPages - 1 ? 'disabled' : ''}>Next →</button>
+            </div>
+          ` : '';
+
+          document.getElementById('recent-table').innerHTML = `
+            <div class="table-scroll"><table>
+              <thead><tr><th>Tool</th><th>Location</th><th>Device</th><th>Browser</th><th>Referrer</th><th>Visit #</th><th>Time on Page</th><th>Session</th><th>Type</th><th>Time</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table></div>
+            ${pagination}
+          `;
+        }
+
+        window.toggleGroup = function(id) {
+          const el = document.getElementById(id);
+          const arrow = document.getElementById(id + '-arrow');
+          el.classList.toggle('open');
+          arrow.textContent = el.classList.contains('open') ? '▲' : '▼';
+        };
+
+        window.changePage = function(dir) {
+          _page += dir;
+          renderRecent(_groups, _page);
+        };
+
+        const _groups = groupRows(data.recent);
+        renderRecent(_groups, _page);
         `;
       } catch (err) {
         console.error('Dashboard load error:', err);
