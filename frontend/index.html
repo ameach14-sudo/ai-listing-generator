@@ -482,9 +482,11 @@
     fetch('/api/log/visit', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId() }, body: JSON.stringify({ page: 'listing', referrer: document.referrer || null, visit_count: _visitCount }) })
       .then(r => r.json()).then(d => {
         _visitId = d.id;
-        if (_visitId) setInterval(() => {
-          fetch('/api/log/exit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: _visitId, time_on_page: Math.round((Date.now() - _pageStart) / 1000) }) }).catch(() => {});
-        }, 60000);
+        if (_visitId) {
+          const pingExit = () => fetch('/api/log/exit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: _visitId, time_on_page: Math.round((Date.now() - _pageStart) / 1000) }) }).catch(() => {});
+          setTimeout(pingExit, 10000);
+          setInterval(pingExit, 30000);
+        }
       }).catch(() => {});
 
     function isAdmin() { return !!localStorage.getItem('admin_token'); }

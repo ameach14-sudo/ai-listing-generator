@@ -331,6 +331,13 @@
 
     .loading { color: var(--muted); font-size: 0.9rem; text-align: center; padding: 20px; }
 
+    .journey-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-right: 4px;
+    }
+
     .group-row { cursor: pointer; }
     .group-row:hover td { background: rgba(200,168,107,0.04); }
     .group-toggle { font-size: 0.75rem; color: var(--accent); margin-left: 6px; }
@@ -615,23 +622,24 @@
           </table>
         ` : '<p class="loading">No data yet.</p>';
 
-        // Recent activity — group + paginate
-        const FIVE_MIN = 5 * 60 * 1000;
+        // Recent activity — group by session + paginate
         const PAGE_SIZE = 15;
         let _page = 0;
 
+        // Group ALL rows with same session_id together (confirmed same person)
         function groupRows(rows) {
-          const groups = [];
+          const map = new Map();
+          const order = [];
           for (const row of rows) {
-            const last = groups[groups.length - 1];
-            if (last && last.session_id && last.session_id === row.session_id &&
-                Math.abs(new Date(last.rows[0].created_at) - new Date(row.created_at)) < FIVE_MIN) {
-              last.rows.push(row);
+            if (row.session_id && map.has(row.session_id)) {
+              map.get(row.session_id).rows.push(row);
             } else {
-              groups.push({ session_id: row.session_id, rows: [row] });
+              const g = { session_id: row.session_id, rows: [row] };
+              if (row.session_id) map.set(row.session_id, g);
+              order.push(g);
             }
           }
-          return groups;
+          return order;
         }
 
         function shortRef(ref) {
@@ -649,14 +657,52 @@
           return Math.round(s / 60) + 'm';
         }
 
-        function rowHtml(r, indent) {
+        function sessionDuration(rows) {
+          if (rows.length < 2) return null;
+          const oldest = new Date(rows[rows.length - 1].created_at);
+          const newest = new Date(rows[0].created_at);
+          const secs = Math.round((newest - oldest) / 1000);
+          return fmtTime(secs);
+        }
+
+        // Summary row for a confirmed session (multiple rows)
+        function sessionSummaryHtml(g, id) {
+          const first = g.rows[g.rows.length - 1]; // oldest = entry point
+          const last  = g.rows[0];                 // newest = last action
+          const dur   = sessionDuration(g.rows);
+          // Build tool journey: visit→Listing→Social etc, skip repeats
+          const journey = [...new Set(g.rows.map(r => toolLabel(r.tool)))].join(' → ');
           return `
-            <td${indent ? ' style="padding-left:24px;"' : ''}>${toolLabel(r.tool)}</td>
+            <td><span class="journey-label">${journey}</span><span class="group-badge">${g.rows.length}</span><span class="group-toggle" id="${id}-arrow">▼</span></td>
+            <td class="muted">${first.location || first.ip_address || 'Unknown'}</td>
+            <td class="muted">${first.device || '—'}</td>
+            <td class="muted">${first.browser || '—'}</td>
+            <td class="muted ref-cell" title="${first.referrer || ''}">${shortRef(first.referrer)}</td>
+            <td class="muted">${dur || '—'}</td>
+            <td><span class="badge ${last.is_admin ? 'admin' : 'free'}">${last.is_admin ? 'Admin' : 'Free'}</span></td>
+            <td class="muted">${formatDate(last.created_at)}</td>
+          `;
+        }
+
+        // Compact sub-row for each action inside a session
+        function subRowHtml(r) {
+          return `
+            <td style="padding-left:20px;color:var(--muted);font-size:0.78rem;">→ ${toolLabel(r.tool)}</td>
+            <td class="muted" colspan="3" style="font-size:0.75rem;">${r.referrer ? `<span title="${r.referrer}">${shortRef(r.referrer)}</span>` : '—'}</td>
+            <td class="muted" style="font-size:0.75rem;">${fmtTime(r.time_on_page)}</td>
+            <td colspan="2"></td>
+            <td class="muted" style="font-size:0.75rem;">${formatDate(r.created_at)}</td>
+          `;
+        }
+
+        // Single-row (no session or lone visit)
+        function rowHtml(r) {
+          return `
+            <td>${toolLabel(r.tool)}</td>
             <td class="muted">${r.location || r.ip_address || 'Unknown'}</td>
             <td class="muted">${r.device || '—'}</td>
             <td class="muted">${r.browser || '—'}</td>
             <td class="muted ref-cell" title="${r.referrer || ''}">${shortRef(r.referrer)}</td>
-            <td class="muted">${r.visit_count || '—'}</td>
             <td class="muted">${fmtTime(r.time_on_page)}</td>
             <td><span class="badge ${r.is_admin ? 'admin' : 'free'}">${r.is_admin ? 'Admin' : 'Free'}</span></td>
             <td class="muted">${formatDate(r.created_at)}</td>
@@ -672,12 +718,12 @@
           const rows = slice.map(g => {
             const id = 'grp-' + groupIdx++;
             if (g.rows.length === 1) {
-              return `<tr>${rowHtml(g.rows[0], false)}</tr>`;
+              return `<tr>${rowHtml(g.rows[0])}</tr>`;
             }
-            const subRows = g.rows.slice(1).map(r => `<tr class="sub-row">${rowHtml(r, true)}</tr>`).join('');
+            const subRows = g.rows.map(r => `<tr class="sub-row">${subRowHtml(r)}</tr>`).join('');
             return `
               <tr class="group-row" onclick="toggleGroup('${id}')">
-                ${rowHtml(g.rows[0], false).replace('</td>', `<span class="group-badge">${g.rows.length}</span><span class="group-toggle" id="${id}-arrow">▼</span></td>`)}
+                ${sessionSummaryHtml(g, id)}
               </tr>
               <tbody class="sub-rows" id="${id}">${subRows}</tbody>
             `;
@@ -685,15 +731,15 @@
 
           const pagination = totalPages > 1 ? `
             <div class="pagination">
-              <button class="page-btn" id="prev-btn" onclick="changePage(-1)" ${page === 0 ? 'disabled' : ''}>← Prev</button>
+              <button class="page-btn" onclick="changePage(-1)" ${page === 0 ? 'disabled' : ''}>← Prev</button>
               <span class="page-info">Page ${page + 1} of ${totalPages}</span>
-              <button class="page-btn" id="next-btn" onclick="changePage(1)" ${page >= totalPages - 1 ? 'disabled' : ''}>Next →</button>
+              <button class="page-btn" onclick="changePage(1)" ${page >= totalPages - 1 ? 'disabled' : ''}>Next →</button>
             </div>
           ` : '';
 
           document.getElementById('recent-table').innerHTML = `
             <div class="table-scroll"><table>
-              <thead><tr><th>Tool</th><th>Location</th><th>Device</th><th>Browser</th><th>Referrer</th><th>Visit #</th><th>Time</th><th>Type</th><th>Logged</th></tr></thead>
+              <thead><tr><th>Journey</th><th>Location</th><th>Device</th><th>Browser</th><th>From</th><th>Duration</th><th>Type</th><th>Last Active</th></tr></thead>
               <tbody>${rows}</tbody>
             </table></div>
             ${pagination}
