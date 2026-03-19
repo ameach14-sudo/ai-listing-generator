@@ -445,8 +445,11 @@ app.get('/api/admin/stats', async (req, res) => {
   if (!checkAdmin(req)) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Midnight today in Central Time (America/Chicago, auto-handles CDT/CST)
+    const ctDateStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' }); // "2026-03-19"
+    const midnightLocal = new Date(ctDateStr + 'T00:00:00');
+    const ctOffsetMs = midnightLocal - new Date(midnightLocal.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+    const today = new Date(midnightLocal.getTime() + ctOffsetMs);
 
     const [allRows, todayRows, paywallRows, visitRows, byTool, topVisitors, recent, dailyCounts] = await Promise.all([
       supabase.from('tool_usage').select('id', { count: 'exact', head: true }).neq('tool', 'paywall').neq('tool', 'visit'),

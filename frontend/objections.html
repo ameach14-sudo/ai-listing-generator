@@ -50,14 +50,14 @@
 
     .nav-links {
       display: flex;
-      gap: 24px;
+      gap: 14px;
       align-items: center;
     }
 
     nav a {
       color: var(--muted);
       text-decoration: none;
-      font-size: 0.85rem;
+      font-size: 0.78rem;
       font-weight: 600;
     }
 
@@ -82,7 +82,7 @@
       transition: all 0.2s;
     }
 
-    @media (max-width: 640px) {
+    @media (max-width: 900px) {
       .hamburger { display: flex; }
       .nav-links {
         display: none;
@@ -317,7 +317,7 @@
       <a href="/follow-up.html">Lead Follow-Up</a>
       <a href="/objections.html" class="active">Objection Handler</a>
       <a href="/prospecting.html">Prospecting</a>
-      <a href="/admin.html" id="admin-nav-link" style="display:none;">Dashboard</a>
+      <a href="/admin.html">Dashboard</a>
     </div>
   </nav>
 
@@ -486,7 +486,6 @@
 
     updateCounter();
     updateAdminLink();
-    if (isAdmin()) document.getElementById('admin-nav-link').style.display = 'block';
     document.getElementById('hamburger-btn').addEventListener('click', () => document.getElementById('nav-links').classList.toggle('open'));
 
     // Admin modal
