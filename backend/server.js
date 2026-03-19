@@ -336,6 +336,54 @@ Guidelines:
   }
 });
 
+app.post('/api/prospecting', async (req, res) => {
+  const { target, delivery, goal, context, tone } = req.body;
+  if (!target) return res.status(400).json({ error: 'Target is required.' });
+
+  const prompt = `You are an expert real estate prospecting copywriter. Write 3 distinct outreach templates a real estate agent can use right now.
+
+Target: ${target}
+Delivery method: ${delivery}
+Goal: ${goal}
+Tone: ${tone}
+${context ? `Context: ${context}` : ''}
+
+Rules:
+- Each variation must have a meaningfully different angle or hook — not just rephrased
+- Sound like a real person, not a script
+- No generic openers like "I hope this message finds you well" or "My name is [Agent] and I'm a real estate agent"
+- Get to the point fast — especially for call scripts and texts
+- For call scripts: include natural pauses and a clear ask
+- For texts: keep it under 160 characters if possible
+- For emails: include a subject line on the first line as "Subject: ..."
+- The agent signs off as [Agent Name]
+- Do NOT use cheesy lines or pressure tactics
+
+Return ONLY valid JSON in this exact format, no commentary:
+{
+  "variations": [
+    { "angle": "Short label for this angle", "body": "Full template text here" },
+    { "angle": "Short label for this angle", "body": "Full template text here" },
+    { "angle": "Short label for this angle", "body": "Full template text here" }
+  ]
+}`;
+
+  try {
+    const message = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1200,
+      messages: [{ role: 'user', content: prompt }],
+    });
+    const raw = message.content[0].text.trim().replace(/^```json\s*/i, '').replace(/```\s*$/i, '');
+    const parsed = JSON.parse(raw);
+    logUsage('prospecting', req, { target, delivery, goal, tone });
+    res.json(parsed);
+  } catch (err) {
+    console.error('Prospecting error:', err.message);
+    res.status(500).json({ error: 'Failed to generate templates. Please try again.' });
+  }
+});
+
 app.post('/api/log/paywall', async (req, res) => {
   await logUsage('paywall', req);
   res.json({ ok: true });

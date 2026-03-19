@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Objection Handler — Real Estate</title>
+  <title>Prospecting Templates — Real Estate AI</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -120,7 +120,35 @@
     }
 
     select option { background: #222; }
-    textarea { resize: vertical; min-height: 90px; }
+    textarea { resize: vertical; min-height: 80px; }
+
+    .target-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .target-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.82rem;
+      padding: 10px 6px;
+      text-align: center;
+      transition: all 0.15s;
+      font-family: inherit;
+      line-height: 1.3;
+    }
+
+    .target-btn:hover { border-color: var(--accent); color: var(--text); }
+    .target-btn.selected {
+      background: rgba(200, 168, 107, 0.12);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
 
     .tone-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
@@ -145,26 +173,6 @@
       font-weight: 600;
     }
 
-    .quick-objections {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .quick-btn {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 0.8rem;
-      padding: 6px 14px;
-      transition: all 0.15s;
-      font-family: inherit;
-    }
-
-    .quick-btn:hover { border-color: var(--accent); color: var(--text); }
-
     .generate-btn {
       background: var(--accent);
       border: none;
@@ -188,28 +196,33 @@
 
     .output-card {
       display: none;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px;
       max-width: 640px;
       margin: 24px auto 0;
     }
 
     .output-card.visible { display: block; }
 
-    .output-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    .variation {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
       margin-bottom: 16px;
     }
 
-    .output-header h2 {
+    .variation-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .variation-label {
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 1.5px;
       color: var(--accent);
+      font-weight: 700;
     }
 
     .copy-btn {
@@ -227,7 +240,7 @@
     .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
     .copy-btn.copied { border-color: #4caf50; color: #4caf50; }
 
-    #output-text {
+    .variation-text {
       color: var(--text);
       font-size: 0.97rem;
       line-height: 1.7;
@@ -240,6 +253,10 @@
       gap: 10px;
       color: var(--muted);
       font-size: 0.9rem;
+      padding: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
     }
 
     .spinner {
@@ -249,6 +266,7 @@
       border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -262,9 +280,29 @@
       border-radius: 6px;
     }
 
+    .regen-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 12px;
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+      display: none;
+      transition: all 0.15s;
+    }
+
+    .regen-btn:hover { border-color: var(--accent); color: var(--accent); }
+
     @media (max-width: 500px) {
       .grid-2 { grid-template-columns: 1fr; }
-      .tone-grid { grid-template-columns: repeat(2, 1fr); }
+      .target-grid { grid-template-columns: repeat(2, 1fr); }
+      .tone-grid { grid-template-columns: repeat(3, 1fr); }
       header h1 { font-size: 1.5rem; }
     }
   </style>
@@ -276,55 +314,55 @@
     <div class="nav-links">
       <a href="/">Listing Generator</a>
       <a href="/follow-up.html">Lead Follow-Up</a>
-      <a href="/objections.html" class="active">Objection Handler</a>
-      <a href="/prospecting.html">Prospecting</a>
+      <a href="/objections.html">Objection Handler</a>
+      <a href="/prospecting.html" class="active">Prospecting</a>
       <a href="/admin.html" id="admin-nav-link" style="display:none;">Dashboard</a>
     </div>
   </nav>
 
   <header>
-    <h1><span>Objection</span> Handler</h1>
-    <p>Type the objection. Get a confident, natural response to use on the spot.</p>
+    <h1><span>Prospecting</span> Templates</h1>
+    <p>Pick your target. Get 3 ready-to-use outreach scripts.</p>
   </header>
 
   <div class="card">
-    <h2>Common Objections</h2>
-    <div class="quick-objections">
-      <button class="quick-btn" data-objection="Your commission is too high. Other agents charge less.">Commission too high</button>
-      <button class="quick-btn" data-objection="I want to wait until spring to list.">Want to wait until spring</button>
-      <button class="quick-btn" data-objection="Zillow says my house is worth more than what you're suggesting.">Zillow says it's worth more</button>
-      <button class="quick-btn" data-objection="I'm going to try selling it myself first (FSBO).">Going FSBO first</button>
-      <button class="quick-btn" data-objection="I need to think about it before signing a listing agreement.">Need to think about it</button>
-      <button class="quick-btn" data-objection="Interest rates are too high. Nobody is buying right now.">Interest rates too high</button>
-      <button class="quick-btn" data-objection="We already have an agent we've worked with before.">Have another agent</button>
-      <button class="quick-btn" data-objection="I don't think now is a good time to buy. The market is going to crash.">Market going to crash</button>
+    <h2>Who Are You Targeting?</h2>
+    <div class="target-grid">
+      <button class="target-btn selected" data-target="Expired Listing">Expired Listing</button>
+      <button class="target-btn" data-target="FSBO (For Sale By Owner)">FSBO</button>
+      <button class="target-btn" data-target="Sphere of Influence">Sphere of Influence</button>
+      <button class="target-btn" data-target="Past Client">Past Client</button>
+      <button class="target-btn" data-target="Neighborhood Farm">Neighborhood Farm</button>
+      <button class="target-btn" data-target="Open House Follow-Up">Open House Follow-Up</button>
     </div>
   </div>
 
   <div class="card">
-    <h2>Objection Details</h2>
+    <h2>Outreach Details</h2>
     <div class="grid-2">
-      <div class="field">
-        <label>Your Role</label>
-        <select id="role">
-          <option value="Listing Agent">Listing Agent</option>
-          <option value="Buyer's Agent">Buyer's Agent</option>
-        </select>
-      </div>
       <div class="field">
         <label>Delivery Method</label>
         <select id="delivery">
-          <option value="In person / on the phone">In person / phone</option>
-          <option value="Via text or email">Text or email</option>
+          <option value="Cold call script">Cold call script</option>
+          <option value="Text message">Text message</option>
+          <option value="Email">Email</option>
+          <option value="Door hanger / mailer">Door hanger / mailer</option>
+          <option value="LinkedIn / DM">LinkedIn / DM</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Your Goal</label>
+        <select id="goal">
+          <option value="Book a listing appointment">Book a listing appointment</option>
+          <option value="Book a buyer consultation">Book a buyer consultation</option>
+          <option value="Stay top of mind">Stay top of mind</option>
+          <option value="Offer a free home valuation">Offer a free home valuation</option>
+          <option value="Invite to an open house">Invite to an open house</option>
         </select>
       </div>
       <div class="field full">
-        <label>The Objection</label>
-        <textarea id="objection" placeholder="Type the exact objection or pick one above..."></textarea>
-      </div>
-      <div class="field full">
-        <label>Context (optional) — any relevant details about the situation</label>
-        <textarea id="context" placeholder="e.g. Seller has been listed for 45 days, originally priced at $550k, comp came in at $520k..." style="min-height:70px;"></textarea>
+        <label>Context (optional) — any details that make this outreach more specific</label>
+        <textarea id="context" placeholder="e.g. Their listing expired after 90 days, originally listed at $620k, 4BR in North Austin..."></textarea>
       </div>
     </div>
   </div>
@@ -332,23 +370,18 @@
   <div class="card">
     <h2>Tone</h2>
     <div class="tone-grid">
-      <button class="tone-btn selected" data-tone="Empathetic">Empathetic</button>
-      <button class="tone-btn" data-tone="Confident">Confident</button>
+      <button class="tone-btn selected" data-tone="Conversational">Conversational</button>
+      <button class="tone-btn" data-tone="Professional">Professional</button>
       <button class="tone-btn" data-tone="Direct">Direct</button>
     </div>
   </div>
 
-  <button class="generate-btn" id="generate-btn">Generate Response</button>
+  <button class="generate-btn" id="generate-btn">Generate 3 Templates</button>
   <p id="gen-counter" style="text-align:center;font-size:0.8rem;margin-top:10px;max-width:640px;margin-left:auto;margin-right:auto;"></p>
 
-  <div class="output-card" id="output-card">
-    <div class="output-header">
-      <h2>Your Response</h2>
-      <button class="copy-btn" id="copy-btn">Copy</button>
-    </div>
-    <div id="output-text"></div>
-    <button class="copy-btn" id="regen-btn" style="margin-top:16px;width:100%;padding:10px;display:none;">Try Another Response</button>
-  </div>
+  <div class="output-card" id="output-card"></div>
+
+  <button class="regen-btn" id="regen-btn">Generate 3 More Variations</button>
 
   <p style="text-align:center;font-size:0.7rem;color:#444;margin-top:40px;">v1.0 · <a href="#" id="admin-link" style="color:#333;text-decoration:none;">Admin</a></p>
 
@@ -383,14 +416,15 @@
       return id;
     }
     function logPaywall() {
-      fetch('/api/log/paywall', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId(), 'X-Session-Id': getSessionId() }, body: '{}' }).catch(() => {});
+      fetch('/api/log/paywall', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId() }, body: '{}' }).catch(() => {});
     }
+
     const _pageStart = Date.now();
-    const _visitKey = 'visit_count_objections';
+    const _visitKey = 'visit_count_prospecting';
     const _visitCount = (parseInt(localStorage.getItem(_visitKey)) || 0) + 1;
     localStorage.setItem(_visitKey, _visitCount);
     let _visitId = null;
-    fetch('/api/log/visit', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId() }, body: JSON.stringify({ page: 'objections', referrer: document.referrer || null, visit_count: _visitCount }) })
+    fetch('/api/log/visit', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId() }, body: JSON.stringify({ page: 'prospecting', referrer: document.referrer || null, visit_count: _visitCount }) })
       .then(r => r.json()).then(d => { _visitId = d.id; }).catch(() => {});
     window.addEventListener('beforeunload', () => {
       if (!_visitId) return;
@@ -426,20 +460,22 @@
       }
     }
 
-    let selectedTone = 'Empathetic';
+    let selectedTarget = 'Expired Listing';
+    let selectedTone = 'Conversational';
 
-    document.querySelectorAll('.tone-btn[data-tone]').forEach(btn => {
+    document.querySelectorAll('.target-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.tone-btn[data-tone]').forEach(b => b.classList.remove('selected'));
+        document.querySelectorAll('.target-btn').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
-        selectedTone = btn.dataset.tone;
+        selectedTarget = btn.dataset.target;
       });
     });
 
-    // Quick objection buttons
-    document.querySelectorAll('.quick-btn').forEach(btn => {
+    document.querySelectorAll('.tone-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.getElementById('objection').value = btn.dataset.objection;
+        document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedTone = btn.dataset.tone;
       });
     });
 
@@ -491,13 +527,42 @@
       if (e.key === 'Enter') document.getElementById('admin-submit').click();
     });
 
+    function copyText(btn, text) {
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+      });
+    }
+
+    function renderVariations(variations) {
+      const outputCard = document.getElementById('output-card');
+      outputCard.innerHTML = variations.map((v, i) => `
+        <div class="variation">
+          <div class="variation-header">
+            <span class="variation-label">Variation ${i + 1}${v.angle ? ' — ' + v.angle : ''}</span>
+            <button class="copy-btn" data-idx="${i}">Copy</button>
+          </div>
+          <div class="variation-text" id="var-text-${i}">${v.body}</div>
+        </div>
+      `).join('');
+
+      variations.forEach((v, i) => {
+        outputCard.querySelector(`[data-idx="${i}"]`).addEventListener('click', function() {
+          copyText(this, v.body);
+        });
+      });
+
+      outputCard.classList.add('visible');
+      document.getElementById('regen-btn').style.display = 'block';
+    }
+
     async function generate() {
       if (!isAdmin() && getCount() >= FREE_LIMIT) {
         logPaywall();
         const outputCard = document.getElementById('output-card');
-        const outputText = document.getElementById('output-text');
         outputCard.classList.add('visible');
-        outputText.innerHTML = `<div class="error-msg" style="text-align:center;padding:20px;line-height:1.8;">
+        outputCard.innerHTML = `<div class="error-msg" style="text-align:center;padding:20px;line-height:1.8;">
           You've used your 10 free generations.<br><br>
           <strong style="color:var(--text);">Want full access?</strong><br>
           Email <a href="mailto:a.meach14@gmail.com" style="color:var(--accent);">a.meach14@gmail.com</a>
@@ -505,59 +570,43 @@
         return;
       }
 
-      const objection = document.getElementById('objection').value.trim();
-      if (!objection) { alert('Please enter an objection.'); return; }
-
       const payload = {
-        objection,
-        role: document.getElementById('role').value,
+        target: selectedTarget,
         delivery: document.getElementById('delivery').value,
+        goal: document.getElementById('goal').value,
         context: document.getElementById('context').value.trim(),
         tone: selectedTone,
       };
 
       const btn = document.getElementById('generate-btn');
       const outputCard = document.getElementById('output-card');
-      const outputText = document.getElementById('output-text');
-
       btn.disabled = true;
       btn.textContent = 'Generating...';
       outputCard.classList.add('visible');
-      outputText.innerHTML = '<div class="loading"><div class="spinner"></div> Writing your response...</div>';
+      outputCard.innerHTML = '<div class="loading"><div class="spinner"></div>Writing your templates...</div>';
       document.getElementById('regen-btn').style.display = 'none';
 
       try {
-        const res = await fetch('/api/objection', {
+        const res = await fetch('/api/prospecting', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId() },
           body: JSON.stringify(payload),
         });
-        if (!res.ok) throw new Error('Server error');
         const data = await res.json();
-        outputText.textContent = data.response;
+        if (!res.ok || data.error) throw new Error(data.error || 'Failed');
         incrementCount();
         updateCounter();
-        document.getElementById('regen-btn').style.display = 'block';
+        renderVariations(data.variations);
       } catch (err) {
-        outputText.innerHTML = `<div class="error-msg">Error: ${err.message}. Please try again.</div>`;
+        outputCard.innerHTML = `<div class="error-msg">${err.message || 'Failed to generate. Please try again.'}</div>`;
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Generate Response';
+        btn.textContent = 'Generate 3 Templates';
       }
     }
 
     document.getElementById('generate-btn').addEventListener('click', generate);
     document.getElementById('regen-btn').addEventListener('click', generate);
-
-    document.getElementById('copy-btn').addEventListener('click', () => {
-      const text = document.getElementById('output-text').textContent;
-      navigator.clipboard.writeText(text).then(() => {
-        const btn = document.getElementById('copy-btn');
-        btn.textContent = 'Copied!';
-        btn.classList.add('copied');
-        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
-      });
-    });
   </script>
 </body>
 </html>
