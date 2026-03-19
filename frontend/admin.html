@@ -101,7 +101,7 @@
 
     header {
       text-align: center;
-      max-width: 900px;
+      max-width: 1100px;
       margin: 0 auto 40px;
       padding: 0 20px;
     }
@@ -110,7 +110,7 @@
     header h1 span { color: var(--accent); }
     header p { margin-top: 10px; color: var(--muted); font-size: 1rem; }
 
-    .container { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
 
     .stats-grid {
       display: grid;
@@ -204,7 +204,14 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 0.82rem;
-      min-width: 900px;
+      min-width: 700px;
+    }
+
+    td.ref-cell {
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     thead th {
@@ -627,16 +634,30 @@
           return groups;
         }
 
+        function shortRef(ref) {
+          if (!ref) return 'Direct';
+          try {
+            const h = new URL(ref).hostname.replace(/^www\./, '');
+            if (h.includes('railway.app') || h.includes('localhost')) return 'Internal';
+            return h;
+          } catch { return 'Direct'; }
+        }
+
+        function fmtTime(s) {
+          if (s == null) return '—';
+          if (s < 60) return s + 's';
+          return Math.round(s / 60) + 'm';
+        }
+
         function rowHtml(r, indent) {
           return `
             <td${indent ? ' style="padding-left:24px;"' : ''}>${toolLabel(r.tool)}</td>
             <td class="muted">${r.location || r.ip_address || 'Unknown'}</td>
             <td class="muted">${r.device || '—'}</td>
             <td class="muted">${r.browser || '—'}</td>
-            <td class="muted">${r.referrer || 'Direct'}</td>
+            <td class="muted ref-cell" title="${r.referrer || ''}">${shortRef(r.referrer)}</td>
             <td class="muted">${r.visit_count || '—'}</td>
-            <td class="muted">${r.time_on_page != null ? r.time_on_page + 's' : '—'}</td>
-            <td class="muted" style="font-size:0.75rem;">${r.session_id || '—'}</td>
+            <td class="muted">${fmtTime(r.time_on_page)}</td>
             <td><span class="badge ${r.is_admin ? 'admin' : 'free'}">${r.is_admin ? 'Admin' : 'Free'}</span></td>
             <td class="muted">${formatDate(r.created_at)}</td>
           `;
@@ -672,7 +693,7 @@
 
           document.getElementById('recent-table').innerHTML = `
             <div class="table-scroll"><table>
-              <thead><tr><th>Tool</th><th>Location</th><th>Device</th><th>Browser</th><th>Referrer</th><th>Visit #</th><th>Time on Page</th><th>Session</th><th>Type</th><th>Time</th></tr></thead>
+              <thead><tr><th>Tool</th><th>Location</th><th>Device</th><th>Browser</th><th>Referrer</th><th>Visit #</th><th>Time</th><th>Type</th><th>Logged</th></tr></thead>
               <tbody>${rows}</tbody>
             </table></div>
             ${pagination}
