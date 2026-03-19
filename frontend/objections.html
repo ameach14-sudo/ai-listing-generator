@@ -395,7 +395,7 @@
         _visitId = d.id;
         if (_visitId) setInterval(() => {
           fetch('/api/log/exit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: _visitId, time_on_page: Math.round((Date.now() - _pageStart) / 1000) }) }).catch(() => {});
-        }, 30000);
+        }, 60000);
       }).catch(() => {});
 
     function updateCounter() {
