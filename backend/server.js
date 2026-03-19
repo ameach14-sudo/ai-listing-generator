@@ -122,6 +122,86 @@ app.post('/api/extra', async (req, res) => {
   }
 });
 
+app.post('/api/followup', async (req, res) => {
+  const { name, leadType, source, timeline, priceRange, area, notes, tone } = req.body;
+  if (!name) return res.status(400).json({ error: 'Lead name is required.' });
+
+  const context = [
+    `Lead name: ${name}`,
+    `Lead type: ${leadType}`,
+    `Lead source: ${source}`,
+    `Timeline: ${timeline}`,
+    priceRange && `Price range: ${priceRange}`,
+    area && `Area of interest: ${area}`,
+    notes && `Notes: ${notes}`,
+  ].filter(Boolean).join('\n');
+
+  const prompt = `You are an expert real estate follow-up copywriter. Write a 5-email follow-up sequence for a real estate agent to send to a lead.
+
+Tone: ${tone}
+
+Lead Details:
+${context}
+
+Rules:
+- Each email must feel personal, not templated
+- Do NOT use generic filler like "I hope this email finds you well"
+- Each email has a different purpose and angle
+- Keep emails concise — 100-150 words each
+- The agent signs off as [Agent Name]
+
+Return ONLY valid JSON in this exact format, no commentary:
+{
+  "emails": [
+    {
+      "purpose": "Initial Outreach",
+      "timing": "Same day as first contact",
+      "subject": "...",
+      "body": "..."
+    },
+    {
+      "purpose": "Value Add",
+      "timing": "2 days later",
+      "subject": "...",
+      "body": "..."
+    },
+    {
+      "purpose": "Check-In",
+      "timing": "5 days later",
+      "subject": "...",
+      "body": "..."
+    },
+    {
+      "purpose": "Market Insight",
+      "timing": "10 days later",
+      "subject": "...",
+      "body": "..."
+    },
+    {
+      "purpose": "Final Touch",
+      "timing": "2 weeks later",
+      "subject": "...",
+      "body": "..."
+    }
+  ]
+}`;
+
+  try {
+    const message = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 2000,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const raw = message.content[0].text.trim();
+    const parsed = JSON.parse(raw);
+    res.json(parsed);
+  } catch (err) {
+    console.error('Follow-up error:', err.message);
+    res.status(500).json({ error: 'Failed to generate sequence. Please try again.' });
+  }
+});
+
 // Fallback — serve frontend for all other routes
 app.get('/{*path}', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
