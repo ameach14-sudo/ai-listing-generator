@@ -244,6 +244,9 @@
 </head>
 <body>
 
+  <div style="background:rgba(200,168,107,0.08);border-bottom:1px solid rgba(200,168,107,0.2);padding:8px 20px;text-align:center;font-size:0.78rem;color:var(--accent);letter-spacing:0.3px;">
+    v4.0 — AI Listing Generator · Lead Follow-Up Sequences · Social Posts · Email Templates · Listing Site Versions
+  </div>
   <nav>
     <a href="/">Listing Generator</a>
     <a href="/follow-up.html" class="active">Lead Follow-Up</a>
@@ -323,23 +326,59 @@
 
   <div id="sequence-container"></div>
 
-  <p style="text-align:center;font-size:0.7rem;color:#444;margin-top:40px;">v1.1.0</p>
+  <p style="text-align:center;font-size:0.7rem;color:#444;margin-top:40px;">v4.0 · <a href="#" id="admin-link" style="color:#333;text-decoration:none;">Admin</a></p>
+
+  <!-- Admin Modal -->
+  <div id="admin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px;width:100%;max-width:360px;margin:20px;">
+      <h2 style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:20px;">Admin Login</h2>
+      <div class="field" style="margin-bottom:12px;">
+        <label>Username</label>
+        <input type="text" id="admin-username" value="Admin" />
+      </div>
+      <div class="field" style="margin-bottom:20px;">
+        <label>Password</label>
+        <input type="password" id="admin-password" />
+      </div>
+      <p id="admin-error" style="color:#e57373;font-size:0.85rem;margin-bottom:12px;display:none;"></p>
+      <button class="generate-btn" id="admin-submit" style="margin-bottom:10px;">Login</button>
+      <button id="admin-cancel" style="background:none;border:none;color:var(--muted);font-size:0.85rem;cursor:pointer;width:100%;font-family:inherit;">Cancel</button>
+    </div>
+  </div>
 
   <script>
     const FREE_LIMIT = 10;
+    const ADMIN_TOKEN_KEY = 'admin_token';
 
+    function isAdmin() { return !!localStorage.getItem(ADMIN_TOKEN_KEY); }
     function getCount() { return parseInt(localStorage.getItem('gen_count') || '0'); }
     function incrementCount() { localStorage.setItem('gen_count', getCount() + 1); }
 
     function updateCounter() {
-      const remaining = Math.max(0, FREE_LIMIT - getCount());
       const el = document.getElementById('gen-counter');
+      if (isAdmin()) {
+        el.textContent = 'Admin — unlimited generations';
+        el.style.color = 'var(--accent)';
+        return;
+      }
+      const remaining = Math.max(0, FREE_LIMIT - getCount());
       if (remaining > 0) {
         el.textContent = `${remaining} free generation${remaining === 1 ? '' : 's'} remaining`;
         el.style.color = remaining === 1 ? '#e57373' : 'var(--muted)';
       } else {
         el.textContent = 'Free limit reached';
         el.style.color = '#e57373';
+      }
+    }
+
+    function updateAdminLink() {
+      const link = document.getElementById('admin-link');
+      if (isAdmin()) {
+        link.textContent = 'Admin: Logged In · Logout';
+        link.style.color = 'var(--accent)';
+      } else {
+        link.textContent = 'Admin';
+        link.style.color = '#333';
       }
     }
 
@@ -354,9 +393,54 @@
     });
 
     updateCounter();
+    updateAdminLink();
+
+    document.getElementById('admin-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      if (isAdmin()) {
+        localStorage.removeItem(ADMIN_TOKEN_KEY);
+        updateAdminLink();
+        updateCounter();
+      } else {
+        const modal = document.getElementById('admin-modal');
+        modal.style.display = 'flex';
+        document.getElementById('admin-password').focus();
+      }
+    });
+
+    document.getElementById('admin-cancel').addEventListener('click', () => {
+      document.getElementById('admin-modal').style.display = 'none';
+    });
+
+    document.getElementById('admin-submit').addEventListener('click', async () => {
+      const username = document.getElementById('admin-username').value.trim();
+      const password = document.getElementById('admin-password').value.trim();
+      const errorEl = document.getElementById('admin-error');
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        localStorage.setItem(ADMIN_TOKEN_KEY, data.token);
+        document.getElementById('admin-modal').style.display = 'none';
+        updateAdminLink();
+        updateCounter();
+        document.getElementById('admin-password').value = '';
+      } catch {
+        errorEl.textContent = 'Invalid username or password.';
+        errorEl.style.display = 'block';
+      }
+    });
+
+    document.getElementById('admin-password').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('admin-submit').click();
+    });
 
     document.getElementById('generate-btn').addEventListener('click', async () => {
-      if (getCount() >= FREE_LIMIT) {
+      if (!isAdmin() && getCount() >= FREE_LIMIT) {
         document.getElementById('sequence-container').innerHTML = `
           <div class="email-card visible">
             <div class="error-msg" style="text-align:center;padding:20px;line-height:1.8;">
