@@ -452,20 +452,20 @@ app.get('/api/admin/stats', async (req, res) => {
     const today = new Date(midnightLocal.getTime() + ctOffsetMs);
 
     const [allRows, todayRows, paywallRows, visitRows, byTool, topVisitors, recent, dailyCounts] = await Promise.all([
-      supabase.from('tool_usage').select('id', { count: 'exact', head: true }).neq('tool', 'paywall').neq('tool', 'visit'),
-      supabase.from('tool_usage').select('id', { count: 'exact', head: true }).neq('tool', 'paywall').neq('tool', 'visit').gte('created_at', today.toISOString()),
-      supabase.from('tool_usage').select('id', { count: 'exact', head: true }).eq('tool', 'paywall'),
-      supabase.from('tool_usage').select('id', { count: 'exact', head: true }).eq('tool', 'visit'),
+      supabase.from('tool_usage').select('id', { count: 'exact', head: true }).neq('tool', 'paywall').neq('tool', 'visit').eq('is_admin', false),
+      supabase.from('tool_usage').select('id', { count: 'exact', head: true }).neq('tool', 'paywall').neq('tool', 'visit').eq('is_admin', false).gte('created_at', today.toISOString()),
+      supabase.from('tool_usage').select('id', { count: 'exact', head: true }).eq('tool', 'paywall').eq('is_admin', false),
+      supabase.from('tool_usage').select('id', { count: 'exact', head: true }).eq('tool', 'visit').eq('is_admin', false),
       supabase.rpc('get_by_tool'),
       supabase.rpc('get_top_visitors'),
       supabase.from('tool_usage').select('tool, ip_address, location, is_admin, session_id, device, browser, referrer, visit_count, time_on_page, created_at').order('created_at', { ascending: false }).limit(100),
       supabase.rpc('get_daily_counts'),
     ]);
 
-    const allSessions = await supabase.from('tool_usage').select('session_id').neq('session_id', null);
+    const allSessions = await supabase.from('tool_usage').select('session_id').neq('session_id', null).eq('is_admin', false);
     const uniqueSessions = new Set((allSessions.data || []).map(r => r.session_id)).size;
 
-    const uniqueVisitors = await supabase.from('tool_usage').select('ip_address').neq('ip_address', null);
+    const uniqueVisitors = await supabase.from('tool_usage').select('ip_address').neq('ip_address', null).eq('is_admin', false);
     const uniqueIPs = new Set((uniqueVisitors.data || []).map(r => r.ip_address)).size;
 
     res.json({
