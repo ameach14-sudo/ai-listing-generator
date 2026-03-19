@@ -35,10 +35,37 @@ async function getLocation(ip) {
 
 function getDevice(req) {
   const ua = req.headers['user-agent'] || '';
-  if (/iPhone|iPad|iPod/i.test(ua)) return /iPad/i.test(ua) ? 'iPad' : 'iPhone';
-  if (/Android/i.test(ua)) return /Mobile/i.test(ua) ? 'Android Phone' : 'Android Tablet';
-  if (/Windows/i.test(ua)) return 'Windows';
-  if (/Macintosh|Mac OS X/i.test(ua)) return 'Mac';
+
+  // iPhone / iPad — model not exposed in modern iOS, use iOS version
+  if (/iPhone|iPod/i.test(ua)) {
+    const ver = (ua.match(/OS ([\d_]+) like/) || [])[1]?.replace(/_/g, '.');
+    return ver ? `iPhone (iOS ${ver})` : 'iPhone';
+  }
+  if (/iPad/i.test(ua)) {
+    const ver = (ua.match(/OS ([\d_]+) like/) || [])[1]?.replace(/_/g, '.');
+    return ver ? `iPad (iOS ${ver})` : 'iPad';
+  }
+
+  // Android — model name is between second semicolon and closing paren
+  if (/Android/i.test(ua)) {
+    const model = (ua.match(/Android[\d. ]+;([^)]+)/) || [])[1]?.trim();
+    const type = /Mobile/i.test(ua) ? 'Android Phone' : 'Android Tablet';
+    return model ? `${type} — ${model}` : type;
+  }
+
+  // Windows — extract version
+  if (/Windows/i.test(ua)) {
+    const nt = (ua.match(/Windows NT ([\d.]+)/) || [])[1];
+    const versions = { '10.0': '10/11', '6.3': '8.1', '6.2': '8', '6.1': '7' };
+    return nt ? `Windows ${versions[nt] || nt}` : 'Windows';
+  }
+
+  // Mac — extract macOS version
+  if (/Macintosh|Mac OS X/i.test(ua)) {
+    const ver = (ua.match(/Mac OS X ([\d_]+)/) || [])[1]?.replace(/_/g, '.');
+    return ver ? `Mac (macOS ${ver})` : 'Mac';
+  }
+
   if (/Linux/i.test(ua)) return 'Linux';
   return 'Unknown';
 }
