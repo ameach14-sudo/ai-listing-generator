@@ -399,6 +399,14 @@
 
     function getCount() { return parseInt(localStorage.getItem('gen_count') || '0'); }
     function incrementCount() { localStorage.setItem('gen_count', getCount() + 1); }
+    function getSessionId() {
+      let id = localStorage.getItem('session_id');
+      if (!id) { id = 'sess_' + Math.random().toString(36).substr(2, 9); localStorage.setItem('session_id', id); }
+      return id;
+    }
+    function logPaywall() {
+      fetch('/api/log/paywall', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId(), 'X-Session-Id': getSessionId() }, body: '{}' }).catch(() => {});
+    }
 
     function isAdmin() { return !!localStorage.getItem('admin_token'); }
 
@@ -455,6 +463,7 @@
     // Generate
     document.getElementById('generate-btn').addEventListener('click', async () => {
       if (!isAdmin() && getCount() >= FREE_LIMIT) {
+        logPaywall();
         const outputCard = document.getElementById('output-card');
         const outputText = document.getElementById('output-text');
         outputCard.classList.add('visible');
@@ -497,7 +506,7 @@
       try {
         const res = await fetch('/api/generate', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '' },
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId() },
           body: JSON.stringify(payload),
         });
 
@@ -528,6 +537,7 @@
 
     async function generateExtra(type, title) {
       if (!isAdmin() && getCount() >= FREE_LIMIT) {
+        logPaywall();
         const extraCard = document.getElementById('extra-card');
         const extraText = document.getElementById('extra-text');
         extraCard.style.display = 'block';
@@ -550,7 +560,7 @@
       try {
         const res = await fetch('/api/extra', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '' },
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId() },
           body: JSON.stringify({ description: lastDescription, type }),
         });
         if (!res.ok) throw new Error('Server error');
@@ -659,7 +669,7 @@
       try {
         const res = await fetch('/api/admin/login', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '' },
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId() },
           body: JSON.stringify({ username, password }),
         });
         if (!res.ok) throw new Error('Invalid credentials.');

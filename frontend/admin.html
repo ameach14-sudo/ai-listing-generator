@@ -304,13 +304,18 @@
       <div class="stats-grid" id="stats-grid">
         <div class="stat-card"><div class="number" id="stat-total">—</div><div class="label">Total Generations</div></div>
         <div class="stat-card"><div class="number" id="stat-today">—</div><div class="label">Today</div></div>
-        <div class="stat-card"><div class="number" id="stat-visitors">—</div><div class="label">Unique Visitors</div></div>
-        <div class="stat-card"><div class="number" id="stat-top-tool">—</div><div class="label">Top Tool</div></div>
+        <div class="stat-card"><div class="number" id="stat-sessions">—</div><div class="label">Unique Sessions</div></div>
+        <div class="stat-card"><div class="number" id="stat-paywall" style="color:#e57373;">—</div><div class="label">Paywall Hits</div></div>
       </div>
 
       <div class="card">
         <h2>Generations by Tool <button class="refresh-btn" id="refresh-btn">Refresh</button></h2>
         <div id="tool-bars"><div class="loading">Loading...</div></div>
+      </div>
+
+      <div class="card">
+        <h2>Daily Activity (Last 14 Days)</h2>
+        <div id="daily-table"><div class="loading">Loading...</div></div>
       </div>
 
       <div class="card">
@@ -353,9 +358,8 @@
         // Stat cards
         document.getElementById('stat-total').textContent = data.total;
         document.getElementById('stat-today').textContent = data.today;
-        document.getElementById('stat-visitors').textContent = data.uniqueVisitors;
-        const topTool = data.byTool[0];
-        document.getElementById('stat-top-tool').textContent = topTool ? toolLabel(topTool.tool) : '—';
+        document.getElementById('stat-sessions').textContent = data.uniqueSessions;
+        document.getElementById('stat-paywall').textContent = data.paywallHits;
 
         // Tool bars
         const maxCount = data.byTool[0]?.count || 1;
@@ -383,15 +387,31 @@
           </table>
         ` || '<p class="loading">No data yet.</p>';
 
+        // Daily counts
+        document.getElementById('daily-table').innerHTML = data.dailyCounts.length ? `
+          <table>
+            <thead><tr><th>Date</th><th>Generations</th></tr></thead>
+            <tbody>
+              ${data.dailyCounts.map(d => `
+                <tr>
+                  <td>${new Date(d.day).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</td>
+                  <td>${d.count}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : '<p class="loading">No data yet.</p>';
+
         // Recent activity
         document.getElementById('recent-table').innerHTML = `
           <table>
-            <thead><tr><th>Tool</th><th>IP Address</th><th>Type</th><th>Time</th></tr></thead>
+            <thead><tr><th>Tool</th><th>Location</th><th>Session</th><th>Type</th><th>Time</th></tr></thead>
             <tbody>
               ${data.recent.map(r => `
                 <tr>
                   <td>${toolLabel(r.tool)}</td>
-                  <td class="muted">${r.ip_address || 'Unknown'}</td>
+                  <td class="muted">${r.location || r.ip_address || 'Unknown'}</td>
+                  <td class="muted" style="font-size:0.75rem;">${r.session_id || '—'}</td>
                   <td><span class="badge ${r.is_admin ? 'admin' : 'free'}">${r.is_admin ? 'Admin' : 'Free'}</span></td>
                   <td class="muted">${formatDate(r.created_at)}</td>
                 </tr>

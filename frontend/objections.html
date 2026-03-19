@@ -358,6 +358,14 @@
     function isAdmin() { return !!localStorage.getItem(ADMIN_TOKEN_KEY); }
     function getCount() { return parseInt(localStorage.getItem('gen_count') || '0'); }
     function incrementCount() { localStorage.setItem('gen_count', getCount() + 1); }
+    function getSessionId() {
+      let id = localStorage.getItem('session_id');
+      if (!id) { id = 'sess_' + Math.random().toString(36).substr(2, 9); localStorage.setItem('session_id', id); }
+      return id;
+    }
+    function logPaywall() {
+      fetch('/api/log/paywall', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId(), 'X-Session-Id': getSessionId() }, body: '{}' }).catch(() => {});
+    }
 
     function updateCounter() {
       const el = document.getElementById('gen-counter');
@@ -432,7 +440,7 @@
       try {
         const res = await fetch('/api/admin/login', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '' },
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId() },
           body: JSON.stringify({ username, password }),
         });
         if (!res.ok) throw new Error();
@@ -454,6 +462,7 @@
 
     async function generate() {
       if (!isAdmin() && getCount() >= FREE_LIMIT) {
+        logPaywall();
         const outputCard = document.getElementById('output-card');
         const outputText = document.getElementById('output-text');
         outputCard.classList.add('visible');
@@ -489,7 +498,7 @@
       try {
         const res = await fetch('/api/objection', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '' },
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId() },
           body: JSON.stringify(payload),
         });
         if (!res.ok) throw new Error('Server error');

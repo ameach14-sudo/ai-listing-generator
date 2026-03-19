@@ -352,6 +352,14 @@
     function isAdmin() { return !!localStorage.getItem(ADMIN_TOKEN_KEY); }
     function getCount() { return parseInt(localStorage.getItem('gen_count') || '0'); }
     function incrementCount() { localStorage.setItem('gen_count', getCount() + 1); }
+    function getSessionId() {
+      let id = localStorage.getItem('session_id');
+      if (!id) { id = 'sess_' + Math.random().toString(36).substr(2, 9); localStorage.setItem('session_id', id); }
+      return id;
+    }
+    function logPaywall() {
+      fetch('/api/log/paywall', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId(), 'X-Session-Id': getSessionId() }, body: '{}' }).catch(() => {});
+    }
 
     function updateCounter() {
       const el = document.getElementById('gen-counter');
@@ -419,7 +427,7 @@
       try {
         const res = await fetch('/api/admin/login', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '' },
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId() },
           body: JSON.stringify({ username, password }),
         });
         if (!res.ok) throw new Error();
@@ -441,6 +449,7 @@
 
     document.getElementById('generate-btn').addEventListener('click', async () => {
       if (!isAdmin() && getCount() >= FREE_LIMIT) {
+        logPaywall();
         document.getElementById('sequence-container').innerHTML = `
           <div class="email-card visible">
             <div class="error-msg" style="text-align:center;padding:20px;line-height:1.8;">
@@ -475,7 +484,7 @@
       try {
         const res = await fetch('/api/followup', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '' },
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId() },
           body: JSON.stringify(payload),
         });
 

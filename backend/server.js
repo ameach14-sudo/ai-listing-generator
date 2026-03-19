@@ -17,13 +17,26 @@ function checkAdmin(req) {
   return req.headers['x-admin-token'] === process.env.ADMIN_TOKEN;
 }
 
+async function getLocation(ip) {
+  try {
+    if (!ip || ip === '::1' || ip.startsWith('127.')) return null;
+    const res = await fetch(`http://ip-api.com/json/${ip}?fields=city,regionName,country`);
+    const data = await res.json();
+    return data.city ? `${data.city}, ${data.regionName}` : null;
+  } catch { return null; }
+}
+
 async function logUsage(tool, req, details = {}) {
   try {
+    const ip = getIP(req);
+    const location = await getLocation(ip);
     await supabase.from('tool_usage').insert({
       tool,
       is_admin: checkAdmin(req),
-      ip_address: getIP(req),
+      ip_address: ip,
+      session_id: req.headers['x-session-id'] || null,
       details,
+      location,
     });
   } catch (err) {
     console.error('Analytics log failed:', err.message);
@@ -264,6 +277,11 @@ Guidelines:
   }
 });
 
+app.post('/api/log/paywall', async (req, res) => {
+  await logUsage('paywall', req);
+  res.json({ ok: true });
+});
+
 app.get('/api/admin/stats', async (req, res) => {
   if (!checkAdmin(req)) return res.status(401).json({ error: 'Unauthorized' });
 
@@ -271,13 +289,18 @@ app.get('/api/admin/stats', async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const [allRows, todayRows, byTool, topVisitors, recent] = await Promise.all([
-      supabase.from('tool_usage').select('id', { count: 'exact', head: true }),
-      supabase.from('tool_usage').select('id', { count: 'exact', head: true }).gte('created_at', today.toISOString()),
+    const [allRows, todayRows, paywallRows, byTool, topVisitors, recent, dailyCounts] = await Promise.all([
+      supabase.from('tool_usage').select('id', { count: 'exact', head: true }).neq('tool', 'paywall'),
+      supabase.from('tool_usage').select('id', { count: 'exact', head: true }).neq('tool', 'paywall').gte('created_at', today.toISOString()),
+      supabase.from('tool_usage').select('id', { count: 'exact', head: true }).eq('tool', 'paywall'),
       supabase.rpc('get_by_tool'),
       supabase.rpc('get_top_visitors'),
-      supabase.from('tool_usage').select('tool, ip_address, is_admin, created_at').order('created_at', { ascending: false }).limit(20),
+      supabase.from('tool_usage').select('tool, ip_address, location, is_admin, session_id, created_at').order('created_at', { ascending: false }).limit(20),
+      supabase.rpc('get_daily_counts'),
     ]);
+
+    const allSessions = await supabase.from('tool_usage').select('session_id').neq('session_id', null);
+    const uniqueSessions = new Set((allSessions.data || []).map(r => r.session_id)).size;
 
     const uniqueVisitors = await supabase.from('tool_usage').select('ip_address').neq('ip_address', null);
     const uniqueIPs = new Set((uniqueVisitors.data || []).map(r => r.ip_address)).size;
@@ -285,10 +308,13 @@ app.get('/api/admin/stats', async (req, res) => {
     res.json({
       total: allRows.count || 0,
       today: todayRows.count || 0,
+      paywallHits: paywallRows.count || 0,
       uniqueVisitors: uniqueIPs,
+      uniqueSessions,
       byTool: byTool.data || [],
       topVisitors: topVisitors.data || [],
       recent: recent.data || [],
+      dailyCounts: dailyCounts.data || [],
     });
   } catch (err) {
     console.error('Stats error:', err.message);
