@@ -32,10 +32,25 @@
       border-bottom: 1px solid var(--border);
       padding: 12px 20px;
       display: flex;
-      gap: 24px;
-      justify-content: center;
-      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
       margin-bottom: 20px;
+    }
+
+    .nav-logo {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.3px;
+      text-decoration: none;
+    }
+
+    .nav-logo span { color: var(--accent); }
+
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      align-items: center;
     }
 
     nav a {
@@ -257,10 +272,13 @@
 <body>
 
   <nav>
-    <a href="/">Listing Generator</a>
-    <a href="/follow-up.html">Lead Follow-Up</a>
-    <a href="/objections.html" class="active">Objection Handler</a>
-    <a href="/admin.html" id="admin-nav-link" style="display:none;">Dashboard</a>
+    <a href="/" class="nav-logo">Real Estate<span>AI</span></a>
+    <div class="nav-links">
+      <a href="/">Listing Generator</a>
+      <a href="/follow-up.html">Lead Follow-Up</a>
+      <a href="/objections.html" class="active">Objection Handler</a>
+      <a href="/admin.html" id="admin-nav-link" style="display:none;">Dashboard</a>
+    </div>
   </nav>
 
   <header>
