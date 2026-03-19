@@ -33,6 +33,16 @@ async function getLocation(ip) {
   }
 }
 
+function getDevice(req) {
+  const ua = req.headers['user-agent'] || '';
+  if (/iPhone|iPad|iPod/i.test(ua)) return /iPad/i.test(ua) ? 'iPad' : 'iPhone';
+  if (/Android/i.test(ua)) return /Mobile/i.test(ua) ? 'Android Phone' : 'Android Tablet';
+  if (/Windows/i.test(ua)) return 'Windows';
+  if (/Macintosh|Mac OS X/i.test(ua)) return 'Mac';
+  if (/Linux/i.test(ua)) return 'Linux';
+  return 'Unknown';
+}
+
 async function logUsage(tool, req, details = {}) {
   try {
     const ip = getIP(req);
@@ -44,6 +54,7 @@ async function logUsage(tool, req, details = {}) {
       session_id: req.headers['x-session-id'] || null,
       details,
       location,
+      device: getDevice(req),
     });
   } catch (err) {
     console.error('Analytics log failed:', err.message);
@@ -309,7 +320,7 @@ app.get('/api/admin/stats', async (req, res) => {
       supabase.from('tool_usage').select('id', { count: 'exact', head: true }).eq('tool', 'visit'),
       supabase.rpc('get_by_tool'),
       supabase.rpc('get_top_visitors'),
-      supabase.from('tool_usage').select('tool, ip_address, location, is_admin, session_id, created_at').order('created_at', { ascending: false }).limit(20),
+      supabase.from('tool_usage').select('tool, ip_address, location, is_admin, session_id, device, created_at').order('created_at', { ascending: false }).limit(20),
       supabase.rpc('get_daily_counts'),
     ]);
 
