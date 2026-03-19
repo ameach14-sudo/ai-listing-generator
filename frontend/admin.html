@@ -394,11 +394,13 @@
         // Visitors table
         document.getElementById('visitors-table').innerHTML = `
           <table>
-            <thead><tr><th>IP Address</th><th>Generations</th><th>Last Seen</th></tr></thead>
+            <thead><tr><th>Session</th><th>IP Address</th><th>Location</th><th>Generations</th><th>Last Seen</th></tr></thead>
             <tbody>
               ${data.topVisitors.map(v => `
                 <tr>
-                  <td>${v.ip_address || 'Unknown'}</td>
+                  <td class="muted" style="font-size:0.75rem;">${v.session_id || '—'}</td>
+                  <td class="muted">${v.ip_address || '—'}</td>
+                  <td>${v.location || '—'}</td>
                   <td>${v.count}</td>
                   <td class="muted">${formatDate(v.last_seen)}</td>
                 </tr>
