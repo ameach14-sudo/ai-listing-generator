@@ -19,11 +19,18 @@ function checkAdmin(req) {
 
 async function getLocation(ip) {
   try {
-    if (!ip || ip === '::1' || ip.startsWith('127.')) return null;
-    const res = await fetch(`http://ip-api.com/json/${ip}?fields=city,regionName,country`);
+    if (!ip) return null;
+    // Strip IPv6-mapped IPv4 prefix (e.g. ::ffff:1.2.3.4 -> 1.2.3.4)
+    const clean = ip.replace(/^::ffff:/, '');
+    if (clean === '::1' || clean.startsWith('127.') || clean.startsWith('10.') || clean.startsWith('192.168.')) return null;
+    const res = await fetch(`http://ip-api.com/json/${clean}?fields=city,regionName,country`);
     const data = await res.json();
+    console.log('Geolocation result for', clean, ':', data);
     return data.city ? `${data.city}, ${data.regionName}` : null;
-  } catch { return null; }
+  } catch (e) {
+    console.error('Geolocation failed:', e.message);
+    return null;
+  }
 }
 
 async function logUsage(tool, req, details = {}) {
