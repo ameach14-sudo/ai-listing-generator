@@ -260,7 +260,7 @@
     <a href="/">Listing Generator</a>
     <a href="/follow-up.html">Lead Follow-Up</a>
     <a href="/objections.html" class="active">Objection Handler</a>
-    <a href="/admin.html">Dashboard</a>
+    <a href="/admin.html" id="admin-nav-link" style="display:none;">Dashboard</a>
   </nav>
 
   <header>
@@ -406,6 +406,7 @@
 
     updateCounter();
     updateAdminLink();
+    if (isAdmin()) document.getElementById('admin-nav-link').style.display = 'block';
 
     // Admin modal
     document.getElementById('admin-link').addEventListener('click', (e) => {
