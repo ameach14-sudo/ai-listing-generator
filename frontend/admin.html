@@ -403,7 +403,7 @@
 
         // Visitors table
         document.getElementById('visitors-table').innerHTML = `
-          <div class="table-scroll"><table>
+          <table>
             <thead><tr><th>Session</th><th>IP Address</th><th>Location</th><th>Generations</th><th>Last Seen</th></tr></thead>
             <tbody>
               ${data.topVisitors.map(v => `
@@ -416,12 +416,12 @@
                 </tr>
               `).join('')}
             </tbody>
-          </table></div>
+          </table>
         ` || '<p class="loading">No data yet.</p>';
 
         // Daily counts
         document.getElementById('daily-table').innerHTML = data.dailyCounts.length ? `
-          <div class="table-scroll"><table>
+          <table>
             <thead><tr><th>Date</th><th>Generations</th></tr></thead>
             <tbody>
               ${data.dailyCounts.map(d => `
@@ -431,7 +431,7 @@
                 </tr>
               `).join('')}
             </tbody>
-          </table></div>
+          </table>
         ` : '<p class="loading">No data yet.</p>';
 
         // Recent activity
