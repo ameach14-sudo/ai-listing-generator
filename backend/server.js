@@ -425,6 +425,22 @@ app.post('/api/log/exit', async (req, res) => {
   }
 });
 
+app.get('/api/admin/since', async (req, res) => {
+  if (!checkAdmin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  const { since } = req.query;
+  if (!since) return res.json({ visits: 0, generations: 0 });
+  try {
+    const sinceDate = new Date(parseInt(since)).toISOString();
+    const [visits, generations] = await Promise.all([
+      supabase.from('tool_usage').select('id', { count: 'exact', head: true }).eq('tool', 'visit').gte('created_at', sinceDate),
+      supabase.from('tool_usage').select('id', { count: 'exact', head: true }).neq('tool', 'visit').neq('tool', 'paywall').gte('created_at', sinceDate),
+    ]);
+    res.json({ visits: visits.count || 0, generations: generations.count || 0 });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed.' });
+  }
+});
+
 app.get('/api/admin/stats', async (req, res) => {
   if (!checkAdmin(req)) return res.status(401).json({ error: 'Unauthorized' });
 

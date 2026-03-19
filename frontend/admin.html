@@ -286,8 +286,75 @@
 
     .loading { color: var(--muted); font-size: 0.9rem; text-align: center; padding: 20px; }
 
+    .since-popup {
+      display: none;
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      z-index: 200;
+      min-width: 260px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      animation: slideIn 0.3s ease;
+    }
+
+    .since-popup.visible { display: block; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .since-popup h3 {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .since-popup .since-stats {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 16px;
+    }
+
+    .since-popup .since-stat .num {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .since-popup .since-stat .lbl {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-top: 4px;
+    }
+
+    .since-popup .dismiss-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.8rem;
+      padding: 6px 12px;
+      width: 100%;
+      transition: all 0.15s;
+    }
+
+    .since-popup .dismiss-btn:hover { border-color: var(--accent); color: var(--accent); }
+
     @media (max-width: 700px) {
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .since-popup { top: 12px; right: 12px; left: 12px; min-width: unset; }
     }
   </style>
 </head>
@@ -360,6 +427,21 @@
   </div>
 
   <p style="text-align:center;font-size:0.7rem;color:#444;margin-top:40px;">v1.0</p>
+
+  <div class="since-popup" id="since-popup">
+    <h3>Since Your Last Login</h3>
+    <div class="since-stats">
+      <div class="since-stat">
+        <div class="num" id="since-visits">—</div>
+        <div class="lbl">Visits</div>
+      </div>
+      <div class="since-stat">
+        <div class="num" id="since-generations">—</div>
+        <div class="lbl">Generations</div>
+      </div>
+    </div>
+    <button class="dismiss-btn" id="dismiss-popup">Dismiss</button>
+  </div>
 
   <script>
     const ADMIN_TOKEN_KEY = 'admin_token';
@@ -461,9 +543,26 @@
       }
     }
 
+    async function showSincePopup() {
+      const lastLogin = localStorage.getItem('last_login_time');
+      if (!lastLogin) return;
+      try {
+        const res = await fetch(`/api/admin/since?since=${lastLogin}`, {
+          headers: { 'X-Admin-Token': localStorage.getItem(ADMIN_TOKEN_KEY) || '' }
+        });
+        const data = await res.json();
+        if (data.visits === 0 && data.generations === 0) return;
+        document.getElementById('since-visits').textContent = data.visits;
+        document.getElementById('since-generations').textContent = data.generations;
+        document.getElementById('since-popup').classList.add('visible');
+      } catch {}
+    }
+
     function showDashboard() {
       document.getElementById('login-wall').style.display = 'none';
       document.getElementById('dashboard').style.display = 'block';
+      showSincePopup();
+      localStorage.setItem('last_login_time', Date.now());
       loadDashboard();
     }
 
@@ -471,7 +570,12 @@
       localStorage.removeItem(ADMIN_TOKEN_KEY);
       document.getElementById('dashboard').style.display = 'none';
       document.getElementById('login-wall').style.display = 'block';
+      document.getElementById('since-popup').classList.remove('visible');
     }
+
+    document.getElementById('dismiss-popup').addEventListener('click', () => {
+      document.getElementById('since-popup').classList.remove('visible');
+    });
 
     // Init
     if (isAdmin()) {
