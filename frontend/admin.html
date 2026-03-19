@@ -765,7 +765,26 @@
       }
     }
 
+    const SINCE_DISMISSED_KEY = 'since_popup_dismissed';
+    const SINCE_VISITS_KEY    = 'since_popup_visits';
+    const SINCE_GENS_KEY      = 'since_popup_gens';
+
     async function showSincePopup() {
+      // Don't show if already dismissed this session
+      if (localStorage.getItem(SINCE_DISMISSED_KEY) === '1') return;
+
+      // Use cached values if available (avoids re-fetch on refresh)
+      const cachedV = localStorage.getItem(SINCE_VISITS_KEY);
+      const cachedG = localStorage.getItem(SINCE_GENS_KEY);
+      if (cachedV !== null && cachedG !== null) {
+        if (cachedV === '0' && cachedG === '0') return;
+        document.getElementById('since-visits').textContent = cachedV;
+        document.getElementById('since-generations').textContent = cachedG;
+        document.getElementById('since-popup').classList.add('visible');
+        return;
+      }
+
+      // First load — fetch from server
       const lastLogin = localStorage.getItem('last_login_time');
       if (!lastLogin) return;
       try {
@@ -773,6 +792,8 @@
           headers: { 'X-Admin-Token': localStorage.getItem(ADMIN_TOKEN_KEY) || '' }
         });
         const data = await res.json();
+        localStorage.setItem(SINCE_VISITS_KEY, data.visits);
+        localStorage.setItem(SINCE_GENS_KEY, data.generations);
         if (data.visits === 0 && data.generations === 0) return;
         document.getElementById('since-visits').textContent = data.visits;
         document.getElementById('since-generations').textContent = data.generations;
@@ -784,11 +805,15 @@
       document.getElementById('login-wall').style.display = 'none';
       document.getElementById('dashboard').style.display = 'block';
       showSincePopup();
-      localStorage.setItem('last_login_time', Date.now());
       loadDashboard();
     }
 
     function logout() {
+      // Reset popup state on logout so it shows fresh next time
+      localStorage.setItem('last_login_time', Date.now());
+      localStorage.removeItem(SINCE_DISMISSED_KEY);
+      localStorage.removeItem(SINCE_VISITS_KEY);
+      localStorage.removeItem(SINCE_GENS_KEY);
       localStorage.removeItem(ADMIN_TOKEN_KEY);
       document.getElementById('dashboard').style.display = 'none';
       document.getElementById('login-wall').style.display = 'block';
@@ -796,6 +821,11 @@
     }
 
     document.getElementById('dismiss-popup').addEventListener('click', () => {
+      // Mark dismissed and reset the baseline timestamp for next login
+      localStorage.setItem(SINCE_DISMISSED_KEY, '1');
+      localStorage.setItem('last_login_time', Date.now());
+      localStorage.removeItem(SINCE_VISITS_KEY);
+      localStorage.removeItem(SINCE_GENS_KEY);
       document.getElementById('since-popup').classList.remove('visible');
     });
 
