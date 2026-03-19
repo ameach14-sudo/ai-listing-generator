@@ -204,8 +204,9 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 0.82rem;
-      min-width: 700px;
     }
+
+    .table-scroll table { min-width: 700px; }
 
     td.ref-cell {
       max-width: 160px;
@@ -591,7 +592,7 @@
 
         // Visitors table
         document.getElementById('visitors-table').innerHTML = `
-          <table>
+          <div class="table-scroll"><table>
             <thead><tr><th>Session</th><th>IP Address</th><th>Location</th><th>Generations</th><th>Last Seen</th></tr></thead>
             <tbody>
               ${data.topVisitors.map(v => `
@@ -604,7 +605,7 @@
                 </tr>
               `).join('')}
             </tbody>
-          </table>
+          </table></div>
         ` || '<p class="loading">No data yet.</p>';
 
         // Daily counts
@@ -845,7 +846,7 @@
       document.addEventListener('mouseup', endDrag);
 
       el.addEventListener('touchstart', e => { if (e.target.tagName !== 'BUTTON') { const t = e.touches[0]; startDrag(t.clientX, t.clientY); } }, { passive: true });
-      document.addEventListener('touchmove', e => { if (dragging) { const t = e.touches[0]; moveDrag(t.clientX, t.clientY); } }, { passive: true });
+      document.addEventListener('touchmove', e => { if (dragging) { e.preventDefault(); const t = e.touches[0]; moveDrag(t.clientX, t.clientY); } }, { passive: false });
       document.addEventListener('touchend', endDrag);
     })();
 
