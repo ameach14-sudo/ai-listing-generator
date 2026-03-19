@@ -2,9 +2,19 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const Anthropic = require('@anthropic-ai/sdk');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
+async function logUsage(tool, isAdmin = false) {
+  try {
+    await supabase.from('tool_usage').insert({ tool, is_admin: isAdmin });
+  } catch (err) {
+    console.error('Analytics log failed:', err.message);
+  }
+}
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../frontend')));
@@ -57,6 +67,7 @@ ${details}`;
     });
 
     const description = message.content[0].text.trim();
+    logUsage('listing');
     res.json({ description });
   } catch (err) {
     console.error('Anthropic error:', err.message);
@@ -115,6 +126,7 @@ app.post('/api/extra', async (req, res) => {
       max_tokens: maxTokens[type] || 300,
       messages: [{ role: 'user', content: EXTRA_PROMPTS[type] + description }],
     });
+    logUsage(type);
     res.json({ content: message.content[0].text.trim() });
   } catch (err) {
     console.error('Anthropic error:', err.message);
@@ -195,6 +207,7 @@ Return ONLY valid JSON in this exact format, no commentary:
 
     const raw = message.content[0].text.trim().replace(/^```json\s*/i, '').replace(/```\s*$/i, '');
     const parsed = JSON.parse(raw);
+    logUsage('followup');
     res.json(parsed);
   } catch (err) {
     console.error('Follow-up error:', err.message);
@@ -229,6 +242,7 @@ Guidelines:
       max_tokens: 300,
       messages: [{ role: 'user', content: prompt }],
     });
+    logUsage('objection');
     res.json({ response: message.content[0].text.trim() });
   } catch (err) {
     console.error('Objection error:', err.message);
