@@ -193,7 +193,7 @@ Return ONLY valid JSON in this exact format, no commentary:
       messages: [{ role: 'user', content: prompt }],
     });
 
-    const raw = message.content[0].text.trim();
+    const raw = message.content[0].text.trim().replace(/^```json\s*/i, '').replace(/```\s*$/i, '');
     const parsed = JSON.parse(raw);
     res.json(parsed);
   } catch (err) {
