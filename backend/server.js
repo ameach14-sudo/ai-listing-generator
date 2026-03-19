@@ -202,6 +202,40 @@ Return ONLY valid JSON in this exact format, no commentary:
   }
 });
 
+app.post('/api/objection', async (req, res) => {
+  const { objection, role, delivery, context, tone } = req.body;
+  if (!objection) return res.status(400).json({ error: 'Objection is required.' });
+
+  const prompt = `You are an expert real estate coach. Write a natural, confident response a real estate agent can use when they hear this objection from a client.
+
+Agent role: ${role}
+Delivery: ${delivery}
+Tone: ${tone}
+${context ? `Context: ${context}` : ''}
+
+Objection: "${objection}"
+
+Guidelines:
+- Sound like a real person talking, not a script
+- Acknowledge the concern before responding — don't be dismissive
+- Be concise — 3-5 sentences max for in-person/phone, slightly longer for text/email
+- Do NOT use cheesy sales phrases like "Great question!" or "I totally understand where you're coming from"
+- Give them a reason to keep the conversation going
+- Output only the response — no labels, no commentary`;
+
+  try {
+    const message = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 300,
+      messages: [{ role: 'user', content: prompt }],
+    });
+    res.json({ response: message.content[0].text.trim() });
+  } catch (err) {
+    console.error('Objection error:', err.message);
+    res.status(500).json({ error: 'Failed to generate response. Please try again.' });
+  }
+});
+
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
   if (

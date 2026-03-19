@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lead Follow-Up Generator</title>
+  <title>Objection Handler — Real Estate</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -34,6 +34,7 @@
       display: flex;
       gap: 24px;
       justify-content: center;
+      flex-wrap: wrap;
       margin-bottom: 20px;
     }
 
@@ -75,7 +76,6 @@
     }
 
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
     .field { display: flex; flex-direction: column; gap: 6px; }
     .field.full { grid-column: 1 / -1; }
 
@@ -105,7 +105,7 @@
     }
 
     select option { background: #222; }
-    textarea { resize: vertical; min-height: 80px; }
+    textarea { resize: vertical; min-height: 90px; }
 
     .tone-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
@@ -130,6 +130,26 @@
       font-weight: 600;
     }
 
+    .quick-objections {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .quick-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      padding: 6px 14px;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .quick-btn:hover { border-color: var(--accent); color: var(--text); }
+
     .generate-btn {
       background: var(--accent);
       border: none;
@@ -151,26 +171,26 @@
     .generate-btn:active { transform: scale(0.99); }
     .generate-btn:disabled { background: #444; color: #777; cursor: not-allowed; transform: none; }
 
-    .email-card {
+    .output-card {
+      display: none;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 24px;
+      padding: 28px;
       max-width: 640px;
-      margin: 16px auto 0;
-      display: none;
+      margin: 24px auto 0;
     }
 
-    .email-card.visible { display: block; }
+    .output-card.visible { display: block; }
 
-    .email-header {
+    .output-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
 
-    .email-header h3 {
+    .output-header h2 {
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 1.5px;
@@ -192,15 +212,9 @@
     .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
     .copy-btn.copied { border-color: #4caf50; color: #4caf50; }
 
-    .email-purpose {
-      font-size: 0.75rem;
-      color: var(--muted);
-      margin-bottom: 10px;
-    }
-
-    .email-body {
+    #output-text {
       color: var(--text);
-      font-size: 0.95rem;
+      font-size: 0.97rem;
       line-height: 1.7;
       white-space: pre-wrap;
     }
@@ -211,8 +225,6 @@
       gap: 10px;
       color: var(--muted);
       font-size: 0.9rem;
-      padding: 20px 0;
-      justify-content: center;
     }
 
     .spinner {
@@ -246,66 +258,53 @@
 
   <nav>
     <a href="/">Listing Generator</a>
-    <a href="/follow-up.html" class="active">Lead Follow-Up</a>
-    <a href="/objections.html">Objection Handler</a>
+    <a href="/follow-up.html">Lead Follow-Up</a>
+    <a href="/objections.html" class="active">Objection Handler</a>
   </nav>
 
   <header>
-    <h1>Lead <span>Follow-Up</span> Generator</h1>
-    <p>Enter your lead's details. Get a 5-email sequence ready to send.</p>
+    <h1><span>Objection</span> Handler</h1>
+    <p>Type the objection. Get a confident, natural response to use on the spot.</p>
   </header>
 
   <div class="card">
-    <h2>Lead Info</h2>
+    <h2>Common Objections</h2>
+    <div class="quick-objections">
+      <button class="quick-btn" data-objection="Your commission is too high. Other agents charge less.">Commission too high</button>
+      <button class="quick-btn" data-objection="I want to wait until spring to list.">Want to wait until spring</button>
+      <button class="quick-btn" data-objection="Zillow says my house is worth more than what you're suggesting.">Zillow says it's worth more</button>
+      <button class="quick-btn" data-objection="I'm going to try selling it myself first (FSBO).">Going FSBO first</button>
+      <button class="quick-btn" data-objection="I need to think about it before signing a listing agreement.">Need to think about it</button>
+      <button class="quick-btn" data-objection="Interest rates are too high. Nobody is buying right now.">Interest rates too high</button>
+      <button class="quick-btn" data-objection="We already have an agent we've worked with before.">Have another agent</button>
+      <button class="quick-btn" data-objection="I don't think now is a good time to buy. The market is going to crash.">Market going to crash</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Objection Details</h2>
     <div class="grid-2">
       <div class="field">
-        <label>Lead First Name</label>
-        <input type="text" id="lead-name" value="Sarah" />
-      </div>
-      <div class="field">
-        <label>Lead Type</label>
-        <select id="lead-type">
-          <option value="Buyer">Buyer</option>
-          <option value="Seller">Seller</option>
-          <option value="Buyer & Seller">Buyer & Seller</option>
-          <option value="Investor">Investor</option>
-          <option value="Renter">Renter</option>
+        <label>Your Role</label>
+        <select id="role">
+          <option value="Listing Agent">Listing Agent</option>
+          <option value="Buyer's Agent">Buyer's Agent</option>
         </select>
       </div>
       <div class="field">
-        <label>Lead Source</label>
-        <select id="lead-source">
-          <option value="Open House">Open House</option>
-          <option value="Zillow">Zillow</option>
-          <option value="Realtor.com">Realtor.com</option>
-          <option value="Referral">Referral</option>
-          <option value="Social Media">Social Media</option>
-          <option value="Cold Outreach">Cold Outreach</option>
-          <option value="Website">Website</option>
-          <option value="Other">Other</option>
+        <label>Delivery Method</label>
+        <select id="delivery">
+          <option value="In person / on the phone">In person / phone</option>
+          <option value="Via text or email">Text or email</option>
         </select>
-      </div>
-      <div class="field">
-        <label>Timeline</label>
-        <select id="timeline">
-          <option value="Ready now">Ready now</option>
-          <option value="1-3 months" selected>1-3 months</option>
-          <option value="3-6 months">3-6 months</option>
-          <option value="6-12 months">6-12 months</option>
-          <option value="Just browsing">Just browsing</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Price Range (optional)</label>
-        <input type="text" id="price-range" value="$400k-$550k" />
-      </div>
-      <div class="field">
-        <label>Area of Interest (optional)</label>
-        <input type="text" id="area" value="South Austin" />
       </div>
       <div class="field full">
-        <label>Notes — anything specific about this lead</label>
-        <textarea id="notes" placeholder="e.g. Has kids, wants good school district. Pre-approved. Came to open house on Maple St.">Has two kids, wants a good school district. Pre-approved. Came to the open house on Maple St, loved the backyard.</textarea>
+        <label>The Objection</label>
+        <textarea id="objection" placeholder="Type the exact objection or pick one above..."></textarea>
+      </div>
+      <div class="field full">
+        <label>Context (optional) — any relevant details about the situation</label>
+        <textarea id="context" placeholder="e.g. Seller has been listed for 45 days, originally priced at $550k, comp came in at $520k..." style="min-height:70px;"></textarea>
       </div>
     </div>
   </div>
@@ -313,18 +312,25 @@
   <div class="card">
     <h2>Tone</h2>
     <div class="tone-grid">
-      <button class="tone-btn selected" data-tone="Warm & Personal">Warm</button>
-      <button class="tone-btn" data-tone="Professional">Professional</button>
-      <button class="tone-btn" data-tone="Direct & Confident">Direct</button>
+      <button class="tone-btn selected" data-tone="Empathetic">Empathetic</button>
+      <button class="tone-btn" data-tone="Confident">Confident</button>
+      <button class="tone-btn" data-tone="Direct">Direct</button>
     </div>
   </div>
 
-  <button class="generate-btn" id="generate-btn">Generate 5-Email Sequence</button>
+  <button class="generate-btn" id="generate-btn">Generate Response</button>
   <p id="gen-counter" style="text-align:center;font-size:0.8rem;margin-top:10px;max-width:640px;margin-left:auto;margin-right:auto;"></p>
 
-  <div id="sequence-container"></div>
+  <div class="output-card" id="output-card">
+    <div class="output-header">
+      <h2>Your Response</h2>
+      <button class="copy-btn" id="copy-btn">Copy</button>
+    </div>
+    <div id="output-text"></div>
+    <button class="copy-btn" id="regen-btn" style="margin-top:16px;width:100%;padding:10px;display:none;">Try Another Response</button>
+  </div>
 
-  <p style="text-align:center;font-size:0.7rem;color:#444;margin-top:40px;">v4.0 · <a href="#" id="admin-link" style="color:#333;text-decoration:none;">Admin</a></p>
+  <p style="text-align:center;font-size:0.7rem;color:#444;margin-top:40px;">v1.0 · <a href="#" id="admin-link" style="color:#333;text-decoration:none;">Admin</a></p>
 
   <!-- Admin Modal -->
   <div id="admin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center;">
@@ -380,7 +386,7 @@
       }
     }
 
-    let selectedTone = 'Warm & Personal';
+    let selectedTone = 'Empathetic';
 
     document.querySelectorAll('.tone-btn[data-tone]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -390,9 +396,17 @@
       });
     });
 
+    // Quick objection buttons
+    document.querySelectorAll('.quick-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('objection').value = btn.dataset.objection;
+      });
+    });
+
     updateCounter();
     updateAdminLink();
 
+    // Admin modal
     document.getElementById('admin-link').addEventListener('click', (e) => {
       e.preventDefault();
       if (isAdmin()) {
@@ -400,8 +414,7 @@
         updateAdminLink();
         updateCounter();
       } else {
-        const modal = document.getElementById('admin-modal');
-        modal.style.display = 'flex';
+        document.getElementById('admin-modal').style.display = 'flex';
         document.getElementById('admin-password').focus();
       }
     });
@@ -437,80 +450,72 @@
       if (e.key === 'Enter') document.getElementById('admin-submit').click();
     });
 
-    document.getElementById('generate-btn').addEventListener('click', async () => {
+    async function generate() {
       if (!isAdmin() && getCount() >= FREE_LIMIT) {
-        document.getElementById('sequence-container').innerHTML = `
-          <div class="email-card visible">
-            <div class="error-msg" style="text-align:center;padding:20px;line-height:1.8;">
-              You've used your 10 free generations.<br><br>
-              <strong style="color:var(--text);">Want full access?</strong><br>
-              Email <a href="mailto:a.meach14@gmail.com" style="color:var(--accent);">a.meach14@gmail.com</a>
-            </div>
-          </div>`;
+        const outputCard = document.getElementById('output-card');
+        const outputText = document.getElementById('output-text');
+        outputCard.classList.add('visible');
+        outputText.innerHTML = `<div class="error-msg" style="text-align:center;padding:20px;line-height:1.8;">
+          You've used your 10 free generations.<br><br>
+          <strong style="color:var(--text);">Want full access?</strong><br>
+          Email <a href="mailto:a.meach14@gmail.com" style="color:var(--accent);">a.meach14@gmail.com</a>
+        </div>`;
         return;
       }
 
+      const objection = document.getElementById('objection').value.trim();
+      if (!objection) { alert('Please enter an objection.'); return; }
+
       const payload = {
-        name: document.getElementById('lead-name').value.trim(),
-        leadType: document.getElementById('lead-type').value,
-        source: document.getElementById('lead-source').value,
-        timeline: document.getElementById('timeline').value,
-        priceRange: document.getElementById('price-range').value.trim(),
-        area: document.getElementById('area').value.trim(),
-        notes: document.getElementById('notes').value.trim(),
+        objection,
+        role: document.getElementById('role').value,
+        delivery: document.getElementById('delivery').value,
+        context: document.getElementById('context').value.trim(),
         tone: selectedTone,
       };
 
-      if (!payload.name) { alert('Please enter the lead\'s name.'); return; }
-
       const btn = document.getElementById('generate-btn');
-      const container = document.getElementById('sequence-container');
+      const outputCard = document.getElementById('output-card');
+      const outputText = document.getElementById('output-text');
 
       btn.disabled = true;
       btn.textContent = 'Generating...';
-      container.innerHTML = `<div class="email-card visible"><div class="loading"><div class="spinner"></div> Writing your 5-email sequence...</div></div>`;
+      outputCard.classList.add('visible');
+      outputText.innerHTML = '<div class="loading"><div class="spinner"></div> Writing your response...</div>';
+      document.getElementById('regen-btn').style.display = 'none';
 
       try {
-        const res = await fetch('/api/followup', {
+        const res = await fetch('/api/objection', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
-
         if (!res.ok) throw new Error('Server error');
         const data = await res.json();
-
-        container.innerHTML = data.emails.map((email, i) => `
-          <div class="email-card visible">
-            <div class="email-header">
-              <h3>Email ${i + 1} — ${email.purpose}</h3>
-              <button class="copy-btn" onclick="copyEmail(${i})">Copy</button>
-            </div>
-            <div class="email-purpose">Send: ${email.timing}</div>
-            <div class="email-body" id="email-${i}"><strong>Subject:</strong> ${email.subject}\n\n${email.body}</div>
-          </div>
-        `).join('');
-
+        outputText.textContent = data.response;
         incrementCount();
         updateCounter();
+        document.getElementById('regen-btn').style.display = 'block';
       } catch (err) {
-        container.innerHTML = `<div class="email-card visible"><div class="error-msg">Error: ${err.message}. Please try again.</div></div>`;
+        outputText.innerHTML = `<div class="error-msg">Error: ${err.message}. Please try again.</div>`;
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Generate 5-Email Sequence';
+        btn.textContent = 'Generate Response';
       }
-    });
+    }
 
-    function copyEmail(index) {
-      const text = document.getElementById(`email-${index}`).textContent;
+    document.getElementById('generate-btn').addEventListener('click', generate);
+    document.getElementById('regen-btn').addEventListener('click', generate);
+
+    document.getElementById('copy-btn').addEventListener('click', () => {
+      const text = document.getElementById('output-text').textContent;
       navigator.clipboard.writeText(text).then(() => {
-        const btns = document.querySelectorAll('.copy-btn');
-        const btn = btns[index];
+        const btn = document.getElementById('copy-btn');
         btn.textContent = 'Copied!';
         btn.classList.add('copied');
         setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
       });
-    }
+    });
   </script>
 </body>
 </html>
