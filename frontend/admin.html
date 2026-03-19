@@ -157,20 +157,28 @@
       flex-shrink: 0;
     }
 
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
+      min-width: 900px;
     }
 
     thead th {
       text-align: left;
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       text-transform: uppercase;
       letter-spacing: 1px;
       color: var(--muted);
       padding-bottom: 12px;
+      padding-right: 16px;
       border-bottom: 1px solid var(--border);
+      white-space: nowrap;
     }
 
     tbody tr {
@@ -180,8 +188,9 @@
     tbody tr:last-child { border-bottom: none; }
 
     tbody td {
-      padding: 10px 0;
+      padding: 10px 16px 10px 0;
       color: var(--text);
+      white-space: nowrap;
     }
 
     tbody td.muted { color: var(--muted); }
@@ -394,7 +403,7 @@
 
         // Visitors table
         document.getElementById('visitors-table').innerHTML = `
-          <table>
+          <div class="table-scroll"><table>
             <thead><tr><th>Session</th><th>IP Address</th><th>Location</th><th>Generations</th><th>Last Seen</th></tr></thead>
             <tbody>
               ${data.topVisitors.map(v => `
@@ -407,12 +416,12 @@
                 </tr>
               `).join('')}
             </tbody>
-          </table>
+          </table></div>
         ` || '<p class="loading">No data yet.</p>';
 
         // Daily counts
         document.getElementById('daily-table').innerHTML = data.dailyCounts.length ? `
-          <table>
+          <div class="table-scroll"><table>
             <thead><tr><th>Date</th><th>Generations</th></tr></thead>
             <tbody>
               ${data.dailyCounts.map(d => `
@@ -422,12 +431,12 @@
                 </tr>
               `).join('')}
             </tbody>
-          </table>
+          </table></div>
         ` : '<p class="loading">No data yet.</p>';
 
         // Recent activity
         document.getElementById('recent-table').innerHTML = `
-          <table>
+          <div class="table-scroll"><table>
             <thead><tr><th>Tool</th><th>Location</th><th>Device</th><th>Browser</th><th>Referrer</th><th>Visit #</th><th>Time on Page</th><th>Session</th><th>Type</th><th>Time</th></tr></thead>
             <tbody>
               ${data.recent.map(r => `
@@ -436,7 +445,7 @@
                   <td class="muted">${r.location || r.ip_address || 'Unknown'}</td>
                   <td class="muted">${r.device || '—'}</td>
                   <td class="muted">${r.browser || '—'}</td>
-                  <td class="muted" style="font-size:0.75rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.referrer || 'Direct'}</td>
+                  <td class="muted">${r.referrer || 'Direct'}</td>
                   <td class="muted">${r.visit_count || '—'}</td>
                   <td class="muted">${r.time_on_page != null ? r.time_on_page + 's' : '—'}</td>
                   <td class="muted" style="font-size:0.75rem;">${r.session_id || '—'}</td>
@@ -445,7 +454,7 @@
                 </tr>
               `).join('')}
             </tbody>
-          </table>
+          </table></div>
         `;
       } catch (err) {
         console.error('Dashboard load error:', err);
