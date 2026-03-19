@@ -427,13 +427,17 @@
         // Recent activity
         document.getElementById('recent-table').innerHTML = `
           <table>
-            <thead><tr><th>Tool</th><th>Location</th><th>Device</th><th>Session</th><th>Type</th><th>Time</th></tr></thead>
+            <thead><tr><th>Tool</th><th>Location</th><th>Device</th><th>Browser</th><th>Referrer</th><th>Visit #</th><th>Time on Page</th><th>Session</th><th>Type</th><th>Time</th></tr></thead>
             <tbody>
               ${data.recent.map(r => `
                 <tr>
                   <td>${toolLabel(r.tool)}</td>
                   <td class="muted">${r.location || r.ip_address || 'Unknown'}</td>
                   <td class="muted">${r.device || '—'}</td>
+                  <td class="muted">${r.browser || '—'}</td>
+                  <td class="muted" style="font-size:0.75rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.referrer || 'Direct'}</td>
+                  <td class="muted">${r.visit_count || '—'}</td>
+                  <td class="muted">${r.time_on_page != null ? r.time_on_page + 's' : '—'}</td>
                   <td class="muted" style="font-size:0.75rem;">${r.session_id || '—'}</td>
                   <td><span class="badge ${r.is_admin ? 'admin' : 'free'}">${r.is_admin ? 'Admin' : 'Free'}</span></td>
                   <td class="muted">${formatDate(r.created_at)}</td>

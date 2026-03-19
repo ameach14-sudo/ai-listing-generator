@@ -70,6 +70,19 @@ function getDevice(req) {
   return 'Unknown';
 }
 
+function getBrowser(req) {
+  const ua = req.headers['user-agent'] || '';
+  if (/Edg\//i.test(ua)) return 'Edge';
+  if (/OPR\/|Opera/i.test(ua)) return 'Opera';
+  if (/Firefox\/[\d.]+/i.test(ua)) return 'Firefox';
+  if (/Chrome\/[\d.]+/i.test(ua) && !/Chromium/i.test(ua)) {
+    const ver = (ua.match(/Chrome\/([\d]+)/) || [])[1];
+    return ver ? `Chrome ${ver}` : 'Chrome';
+  }
+  if (/Safari\/[\d.]+/i.test(ua) && !/Chrome/i.test(ua)) return 'Safari';
+  return 'Unknown';
+}
+
 async function logUsage(tool, req, details = {}) {
   try {
     const ip = getIP(req);
@@ -82,6 +95,7 @@ async function logUsage(tool, req, details = {}) {
       details,
       location,
       device: getDevice(req),
+      browser: getBrowser(req),
     });
   } catch (err) {
     console.error('Analytics log failed:', err.message);
@@ -328,9 +342,39 @@ app.post('/api/log/paywall', async (req, res) => {
 });
 
 app.post('/api/log/visit', async (req, res) => {
-  const { page } = req.body;
-  await logUsage('visit', req, { page: page || 'unknown' });
-  res.json({ ok: true });
+  const { page, referrer, visit_count } = req.body;
+  try {
+    const ip = getIP(req);
+    const location = await getLocation(ip);
+    const { data } = await supabase.from('tool_usage').insert({
+      tool: 'visit',
+      is_admin: checkAdmin(req),
+      ip_address: ip,
+      session_id: req.headers['x-session-id'] || null,
+      details: { page: page || 'unknown' },
+      location,
+      device: getDevice(req),
+      browser: getBrowser(req),
+      referrer: referrer || null,
+      visit_count: visit_count || 1,
+    }).select('id').single();
+    res.json({ ok: true, id: data?.id || null });
+  } catch (err) {
+    console.error('Visit log failed:', err.message);
+    res.json({ ok: false });
+  }
+});
+
+app.post('/api/log/exit', async (req, res) => {
+  const { id, time_on_page } = req.body;
+  if (!id || !time_on_page) return res.json({ ok: false });
+  try {
+    await supabase.from('tool_usage').update({ time_on_page }).eq('id', id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Exit log failed:', err.message);
+    res.json({ ok: false });
+  }
 });
 
 app.get('/api/admin/stats', async (req, res) => {
@@ -347,7 +391,7 @@ app.get('/api/admin/stats', async (req, res) => {
       supabase.from('tool_usage').select('id', { count: 'exact', head: true }).eq('tool', 'visit'),
       supabase.rpc('get_by_tool'),
       supabase.rpc('get_top_visitors'),
-      supabase.from('tool_usage').select('tool, ip_address, location, is_admin, session_id, device, created_at').order('created_at', { ascending: false }).limit(20),
+      supabase.from('tool_usage').select('tool, ip_address, location, is_admin, session_id, device, browser, referrer, visit_count, time_on_page, created_at').order('created_at', { ascending: false }).limit(20),
       supabase.rpc('get_daily_counts'),
     ]);
 

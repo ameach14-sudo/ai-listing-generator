@@ -384,7 +384,18 @@
     function logPaywall() {
       fetch('/api/log/paywall', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId(), 'X-Session-Id': getSessionId() }, body: '{}' }).catch(() => {});
     }
-    fetch('/api/log/visit', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId() }, body: JSON.stringify({ page: 'objections' }) }).catch(() => {});
+    const _pageStart = Date.now();
+    const _visitKey = 'visit_count_objections';
+    const _visitCount = (parseInt(localStorage.getItem(_visitKey)) || 0) + 1;
+    localStorage.setItem(_visitKey, _visitCount);
+    let _visitId = null;
+    fetch('/api/log/visit', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId() }, body: JSON.stringify({ page: 'objections', referrer: document.referrer || null, visit_count: _visitCount }) })
+      .then(r => r.json()).then(d => { _visitId = d.id; }).catch(() => {});
+    window.addEventListener('beforeunload', () => {
+      if (!_visitId) return;
+      const t = Math.round((Date.now() - _pageStart) / 1000);
+      navigator.sendBeacon('/api/log/exit', new Blob([JSON.stringify({ id: _visitId, time_on_page: t })], { type: 'application/json' }));
+    });
 
     function updateCounter() {
       const el = document.getElementById('gen-counter');
