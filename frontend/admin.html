@@ -34,6 +34,7 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 20px;
+      position: relative;
     }
 
     .nav-logo {
@@ -60,6 +61,43 @@
     }
 
     nav a.active { color: var(--accent); }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 4px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: all 0.2s;
+    }
+
+    @media (max-width: 640px) {
+      .hamburger { display: flex; }
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 16px 20px;
+        flex-direction: column;
+        gap: 16px;
+        z-index: 99;
+      }
+      .nav-links.open { display: flex; }
+    }
 
     header {
       text-align: center;
@@ -329,7 +367,7 @@
     .since-popup {
       display: none;
       position: fixed;
-      top: 24px;
+      top: 100px;
       right: 24px;
       background: var(--surface);
       border: 1px solid var(--accent);
@@ -339,7 +377,11 @@
       min-width: 260px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.5);
       animation: slideIn 0.3s ease;
+      user-select: none;
+      cursor: grab;
     }
+
+    .since-popup:active { cursor: grabbing; }
 
     .since-popup.visible { display: block; }
 
@@ -392,9 +434,18 @@
 
     .since-popup .dismiss-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-    @media (max-width: 700px) {
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 640px) {
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .since-popup { top: 12px; right: 12px; left: 12px; min-width: unset; }
+      .stats-grid .stat-card:last-child { grid-column: 1 / -1; }
+      .container { padding: 0 12px; }
+      .card { padding: 16px; }
+      header h1 { font-size: 1.5rem; }
+      header p { font-size: 0.9rem; }
+      .since-popup { top: 80px; right: 12px; left: 12px; min-width: unset; }
     }
   </style>
 </head>
@@ -402,7 +453,8 @@
 
   <nav>
     <a href="/" class="nav-logo">Real Estate<span>AI</span></a>
-    <div class="nav-links">
+    <button class="hamburger" id="hamburger-btn" aria-label="Menu"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="nav-links">
       <a href="/">Listing Generator</a>
       <a href="/follow-up.html">Lead Follow-Up</a>
       <a href="/objections.html">Objection Handler</a>
@@ -680,6 +732,47 @@
     document.getElementById('dismiss-popup').addEventListener('click', () => {
       document.getElementById('since-popup').classList.remove('visible');
     });
+
+    // Draggable popup
+    (function() {
+      const el = document.getElementById('since-popup');
+      let dragging = false, startX, startY, origLeft, origTop;
+
+      function getPos() {
+        const rect = el.getBoundingClientRect();
+        return { left: rect.left, top: rect.top };
+      }
+
+      function startDrag(x, y) {
+        const pos = getPos();
+        el.style.right = 'auto';
+        el.style.left = pos.left + 'px';
+        el.style.top = pos.top + 'px';
+        dragging = true;
+        startX = x; startY = y;
+        origLeft = pos.left; origTop = pos.top;
+        el.style.cursor = 'grabbing';
+      }
+
+      function moveDrag(x, y) {
+        if (!dragging) return;
+        const dx = x - startX, dy = y - startY;
+        el.style.left = Math.max(0, origLeft + dx) + 'px';
+        el.style.top = Math.max(0, origTop + dy) + 'px';
+      }
+
+      function endDrag() { dragging = false; el.style.cursor = 'grab'; }
+
+      el.addEventListener('mousedown', e => { if (e.target.tagName !== 'BUTTON') startDrag(e.clientX, e.clientY); });
+      document.addEventListener('mousemove', e => moveDrag(e.clientX, e.clientY));
+      document.addEventListener('mouseup', endDrag);
+
+      el.addEventListener('touchstart', e => { if (e.target.tagName !== 'BUTTON') { const t = e.touches[0]; startDrag(t.clientX, t.clientY); } }, { passive: true });
+      document.addEventListener('touchmove', e => { if (dragging) { const t = e.touches[0]; moveDrag(t.clientX, t.clientY); } }, { passive: true });
+      document.addEventListener('touchend', endDrag);
+    })();
+
+    document.getElementById('hamburger-btn').addEventListener('click', () => document.getElementById('nav-links').classList.toggle('open'));
 
     // Init
     if (isAdmin()) {

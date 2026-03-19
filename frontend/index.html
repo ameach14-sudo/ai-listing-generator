@@ -267,18 +267,81 @@
       .tone-grid { grid-template-columns: repeat(2, 1fr); }
       header h1 { font-size: 1.5rem; }
     }
+
+    .nav-logo-link {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.3px;
+      text-decoration: none;
+    }
+
+    .nav-logo-link span { color: var(--accent); }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 4px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: all 0.2s;
+    }
+
+    .index-nav-links {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .index-nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .index-nav-links a.active-link { color: var(--accent); }
+
+    @media (max-width: 640px) {
+      .hamburger { display: flex; }
+      .index-nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 16px 20px;
+        flex-direction: column;
+        gap: 16px;
+        z-index: 99;
+      }
+      .index-nav-links.open { display: flex; }
+    }
   </style>
 </head>
 <body>
 
-  <nav style="background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-    <a href="/" style="font-size:17px;font-weight:700;color:var(--text);letter-spacing:-0.3px;text-decoration:none;">Real Estate<span style="color:var(--accent);">AI</span></a>
-    <div style="display:flex;gap:24px;align-items:center;">
-      <a href="/" style="color:var(--accent);text-decoration:none;font-size:0.85rem;font-weight:600;">Listing Generator</a>
-      <a href="/follow-up.html" style="color:var(--muted);text-decoration:none;font-size:0.85rem;font-weight:600;">Lead Follow-Up</a>
-      <a href="/objections.html" style="color:var(--muted);text-decoration:none;font-size:0.85rem;font-weight:600;">Objection Handler</a>
-      <a href="/prospecting.html" style="color:var(--muted);text-decoration:none;font-size:0.85rem;font-weight:600;">Prospecting</a>
-      <a href="/admin.html" id="admin-nav-link" style="color:var(--muted);text-decoration:none;font-size:0.85rem;font-weight:600;display:none;">Dashboard</a>
+  <nav style="background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;position:relative;">
+    <a href="/" class="nav-logo-link">Real Estate<span>AI</span></a>
+    <button class="hamburger" id="hamburger-btn" aria-label="Menu"><span></span><span></span><span></span></button>
+    <div class="index-nav-links" id="nav-links">
+      <a href="/" class="active-link">Listing Generator</a>
+      <a href="/follow-up.html">Lead Follow-Up</a>
+      <a href="/objections.html">Objection Handler</a>
+      <a href="/prospecting.html">Prospecting</a>
+      <a href="/admin.html" id="admin-nav-link" style="display:none;">Dashboard</a>
     </div>
   </nav>
 
@@ -466,6 +529,7 @@
 
     updateCounter();
     if (isAdmin()) document.getElementById('admin-nav-link').style.display = 'block';
+    document.getElementById('hamburger-btn').addEventListener('click', () => document.getElementById('nav-links').classList.toggle('open'));
 
     // Advanced toggle
     document.getElementById('advanced-toggle').addEventListener('click', () => {
