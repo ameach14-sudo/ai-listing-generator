@@ -386,12 +386,12 @@
     localStorage.setItem(_visitKey, _visitCount);
     let _visitId = null;
     fetch('/api/log/visit', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId() }, body: JSON.stringify({ page: 'follow-up', referrer: document.referrer || null, visit_count: _visitCount }) })
-      .then(r => r.json()).then(d => { _visitId = d.id; }).catch(() => {});
-    window.addEventListener('beforeunload', () => {
-      if (!_visitId) return;
-      const t = Math.round((Date.now() - _pageStart) / 1000);
-      navigator.sendBeacon('/api/log/exit', new Blob([JSON.stringify({ id: _visitId, time_on_page: t })], { type: 'application/json' }));
-    });
+      .then(r => r.json()).then(d => {
+        _visitId = d.id;
+        if (_visitId) setInterval(() => {
+          fetch('/api/log/exit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: _visitId, time_on_page: Math.round((Date.now() - _pageStart) / 1000) }) }).catch(() => {});
+        }, 30000);
+      }).catch(() => {});
 
     function updateCounter() {
       const el = document.getElementById('gen-counter');
