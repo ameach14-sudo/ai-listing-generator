@@ -495,7 +495,7 @@
       try {
         const res = await fetch('/api/generate', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '' },
           body: JSON.stringify(payload),
         });
 
@@ -548,7 +548,7 @@
       try {
         const res = await fetch('/api/extra', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '' },
           body: JSON.stringify({ description: lastDescription, type }),
         });
         if (!res.ok) throw new Error('Server error');
@@ -657,7 +657,7 @@
       try {
         const res = await fetch('/api/admin/login', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '' },
           body: JSON.stringify({ username, password }),
         });
         if (!res.ok) throw new Error('Invalid credentials.');

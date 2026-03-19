@@ -8,9 +8,23 @@ const app = express();
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-async function logUsage(tool, isAdmin = false) {
+function getIP(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  return forwarded ? forwarded.split(',')[0].trim() : req.socket.remoteAddress;
+}
+
+function checkAdmin(req) {
+  return req.headers['x-admin-token'] === process.env.ADMIN_TOKEN;
+}
+
+async function logUsage(tool, req, details = {}) {
   try {
-    await supabase.from('tool_usage').insert({ tool, is_admin: isAdmin });
+    await supabase.from('tool_usage').insert({
+      tool,
+      is_admin: checkAdmin(req),
+      ip_address: getIP(req),
+      details,
+    });
   } catch (err) {
     console.error('Analytics log failed:', err.message);
   }
@@ -67,7 +81,7 @@ ${details}`;
     });
 
     const description = message.content[0].text.trim();
-    logUsage('listing');
+    logUsage('listing', req, { type, beds, baths, sqft, tone, length });
     res.json({ description });
   } catch (err) {
     console.error('Anthropic error:', err.message);
@@ -126,7 +140,7 @@ app.post('/api/extra', async (req, res) => {
       max_tokens: maxTokens[type] || 300,
       messages: [{ role: 'user', content: EXTRA_PROMPTS[type] + description }],
     });
-    logUsage(type);
+    logUsage(type, req);
     res.json({ content: message.content[0].text.trim() });
   } catch (err) {
     console.error('Anthropic error:', err.message);
@@ -207,7 +221,7 @@ Return ONLY valid JSON in this exact format, no commentary:
 
     const raw = message.content[0].text.trim().replace(/^```json\s*/i, '').replace(/```\s*$/i, '');
     const parsed = JSON.parse(raw);
-    logUsage('followup');
+    logUsage('followup', req, { leadType, source, timeline, tone });
     res.json(parsed);
   } catch (err) {
     console.error('Follow-up error:', err.message);
@@ -242,7 +256,7 @@ Guidelines:
       max_tokens: 300,
       messages: [{ role: 'user', content: prompt }],
     });
-    logUsage('objection');
+    logUsage('objection', req, { role, delivery, tone });
     res.json({ response: message.content[0].text.trim() });
   } catch (err) {
     console.error('Objection error:', err.message);

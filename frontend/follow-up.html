@@ -417,7 +417,7 @@
       try {
         const res = await fetch('/api/admin/login', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '' },
           body: JSON.stringify({ username, password }),
         });
         if (!res.ok) throw new Error();
@@ -473,7 +473,7 @@
       try {
         const res = await fetch('/api/followup', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '' },
           body: JSON.stringify(payload),
         });
 
