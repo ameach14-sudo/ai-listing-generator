@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --surface2: #222;
+      --border: #2e2e2e;
+      --accent: #c8a86b;
+      --text: #f0ece4;
+      --muted: #888;
+      --radius: 10px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    nav a.active { color: var(--accent); }
+
+    header {
+      text-align: center;
+      max-width: 900px;
+      margin: 0 auto 40px;
+      padding: 0 20px;
+    }
+
+    header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; }
+    header h1 span { color: var(--accent); }
+    header p { margin-top: 10px; color: var(--muted); font-size: 1rem; }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-card .number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat-card .label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .card h2 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+
+    .tool-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .tool-bar .tool-name {
+      font-size: 0.85rem;
+      color: var(--text);
+      width: 120px;
+      flex-shrink: 0;
+    }
+
+    .tool-bar .bar-track {
+      flex: 1;
+      background: var(--surface2);
+      border-radius: 4px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .tool-bar .bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    .tool-bar .count {
+      font-size: 0.85rem;
+      color: var(--muted);
+      width: 30px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    thead th {
+      text-align: left;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+
+    tbody td {
+      padding: 10px 0;
+      color: var(--text);
+    }
+
+    tbody td.muted { color: var(--muted); }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .badge.admin { background: rgba(200,168,107,0.15); color: var(--accent); }
+    .badge.free { background: rgba(136,136,136,0.1); color: var(--muted); }
+
+    .login-wall {
+      max-width: 360px;
+      margin: 80px auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+    }
+
+    .login-wall h2 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; text-align: left; }
+
+    label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.95rem;
+      padding: 10px 12px;
+      width: 100%;
+      font-family: inherit;
+    }
+
+    input:focus { outline: none; border-color: var(--accent); }
+
+    .btn {
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #0f0f0f;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 12px;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .btn:hover { opacity: 0.9; }
+
+    .error-msg {
+      color: #e57373;
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
+
+    .refresh-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.8rem;
+      padding: 6px 12px;
+      float: right;
+      margin-top: -4px;
+    }
+
+    .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .loading { color: var(--muted); font-size: 0.9rem; text-align: center; padding: 20px; }
+
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="/">Listing Generator</a>
+    <a href="/follow-up.html">Lead Follow-Up</a>
+    <a href="/objections.html">Objection Handler</a>
+    <a href="/admin.html" class="active">Dashboard</a>
+  </nav>
+
+  <!-- Login wall (shown if not admin) -->
+  <div id="login-wall" style="display:none;">
+    <div class="login-wall">
+      <h2>Admin Access Required</h2>
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="login-username" value="Admin" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="login-password" />
+      </div>
+      <p id="login-error" class="error-msg" style="display:none;"></p>
+      <button class="btn" id="login-submit">Login</button>
+    </div>
+  </div>
+
+  <!-- Dashboard (shown when logged in) -->
+  <div id="dashboard" style="display:none;">
+    <header>
+      <h1><span>Admin</span> Dashboard</h1>
+      <p>Usage analytics across all tools · <a href="#" id="logout-btn" style="color:var(--muted);">Logout</a></p>
+    </header>
+
+    <div class="container">
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card"><div class="number" id="stat-total">—</div><div class="label">Total Generations</div></div>
+        <div class="stat-card"><div class="number" id="stat-today">—</div><div class="label">Today</div></div>
+        <div class="stat-card"><div class="number" id="stat-visitors">—</div><div class="label">Unique Visitors</div></div>
+        <div class="stat-card"><div class="number" id="stat-top-tool">—</div><div class="label">Top Tool</div></div>
+      </div>
+
+      <div class="card">
+        <h2>Generations by Tool <button class="refresh-btn" id="refresh-btn">Refresh</button></h2>
+        <div id="tool-bars"><div class="loading">Loading...</div></div>
+      </div>
+
+      <div class="card">
+        <h2>Top Visitors by Usage</h2>
+        <div id="visitors-table"><div class="loading">Loading...</div></div>
+      </div>
+
+      <div class="card">
+        <h2>Recent Activity</h2>
+        <div id="recent-table"><div class="loading">Loading...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <p style="text-align:center;font-size:0.7rem;color:#444;margin-top:40px;">v1.0</p>
+
+  <script>
+    const ADMIN_TOKEN_KEY = 'admin_token';
+    function isAdmin() { return !!localStorage.getItem(ADMIN_TOKEN_KEY); }
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
+        d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    }
+
+    function toolLabel(tool) {
+      const labels = { listing: 'Listing', social: 'Social Post', email: 'Email', zillow: 'Listing Site', followup: 'Follow-Up', objection: 'Objection' };
+      return labels[tool] || tool;
+    }
+
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/admin/stats', {
+          headers: { 'X-Admin-Token': localStorage.getItem(ADMIN_TOKEN_KEY) || '' }
+        });
+        if (res.status === 401) { logout(); return; }
+        const data = await res.json();
+
+        // Stat cards
+        document.getElementById('stat-total').textContent = data.total;
+        document.getElementById('stat-today').textContent = data.today;
+        document.getElementById('stat-visitors').textContent = data.uniqueVisitors;
+        const topTool = data.byTool[0];
+        document.getElementById('stat-top-tool').textContent = topTool ? toolLabel(topTool.tool) : '—';
+
+        // Tool bars
+        const maxCount = data.byTool[0]?.count || 1;
+        document.getElementById('tool-bars').innerHTML = data.byTool.map(t => `
+          <div class="tool-bar">
+            <div class="tool-name">${toolLabel(t.tool)}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round((t.count / maxCount) * 100)}%"></div></div>
+            <div class="count">${t.count}</div>
+          </div>
+        `).join('') || '<p class="loading">No data yet.</p>';
+
+        // Visitors table
+        document.getElementById('visitors-table').innerHTML = `
+          <table>
+            <thead><tr><th>IP Address</th><th>Generations</th><th>Last Seen</th></tr></thead>
+            <tbody>
+              ${data.topVisitors.map(v => `
+                <tr>
+                  <td>${v.ip_address || 'Unknown'}</td>
+                  <td>${v.count}</td>
+                  <td class="muted">${formatDate(v.last_seen)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` || '<p class="loading">No data yet.</p>';
+
+        // Recent activity
+        document.getElementById('recent-table').innerHTML = `
+          <table>
+            <thead><tr><th>Tool</th><th>IP Address</th><th>Type</th><th>Time</th></tr></thead>
+            <tbody>
+              ${data.recent.map(r => `
+                <tr>
+                  <td>${toolLabel(r.tool)}</td>
+                  <td class="muted">${r.ip_address || 'Unknown'}</td>
+                  <td><span class="badge ${r.is_admin ? 'admin' : 'free'}">${r.is_admin ? 'Admin' : 'Free'}</span></td>
+                  <td class="muted">${formatDate(r.created_at)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch (err) {
+        console.error('Dashboard load error:', err);
+      }
+    }
+
+    function showDashboard() {
+      document.getElementById('login-wall').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      loadDashboard();
+    }
+
+    function logout() {
+      localStorage.removeItem(ADMIN_TOKEN_KEY);
+      document.getElementById('dashboard').style.display = 'none';
+      document.getElementById('login-wall').style.display = 'block';
+    }
+
+    // Init
+    if (isAdmin()) {
+      showDashboard();
+    } else {
+      document.getElementById('login-wall').style.display = 'block';
+      setTimeout(() => document.getElementById('login-password').focus(), 100);
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', (e) => { e.preventDefault(); logout(); });
+    document.getElementById('refresh-btn').addEventListener('click', loadDashboard);
+
+    document.getElementById('login-submit').addEventListener('click', async () => {
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value.trim();
+      const errorEl = document.getElementById('login-error');
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        localStorage.setItem(ADMIN_TOKEN_KEY, data.token);
+        showDashboard();
+      } catch {
+        errorEl.textContent = 'Invalid username or password.';
+        errorEl.style.display = 'block';
+      }
+    });
+
+    document.getElementById('login-password').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('login-submit').click();
+    });
+  </script>
+</body>
+</html>
