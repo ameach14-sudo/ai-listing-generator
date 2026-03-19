@@ -360,6 +360,7 @@
     function logPaywall() {
       fetch('/api/log/paywall', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId(), 'X-Session-Id': getSessionId() }, body: '{}' }).catch(() => {});
     }
+    fetch('/api/log/visit', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': localStorage.getItem('admin_token') || '', 'X-Session-Id': getSessionId() }, body: JSON.stringify({ page: 'follow-up' }) }).catch(() => {});
 
     function updateCounter() {
       const el = document.getElementById('gen-counter');

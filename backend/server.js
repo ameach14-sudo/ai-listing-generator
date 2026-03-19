@@ -289,6 +289,12 @@ app.post('/api/log/paywall', async (req, res) => {
   res.json({ ok: true });
 });
 
+app.post('/api/log/visit', async (req, res) => {
+  const { page } = req.body;
+  await logUsage('visit', req, { page: page || 'unknown' });
+  res.json({ ok: true });
+});
+
 app.get('/api/admin/stats', async (req, res) => {
   if (!checkAdmin(req)) return res.status(401).json({ error: 'Unauthorized' });
 
@@ -296,10 +302,11 @@ app.get('/api/admin/stats', async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const [allRows, todayRows, paywallRows, byTool, topVisitors, recent, dailyCounts] = await Promise.all([
-      supabase.from('tool_usage').select('id', { count: 'exact', head: true }).neq('tool', 'paywall'),
-      supabase.from('tool_usage').select('id', { count: 'exact', head: true }).neq('tool', 'paywall').gte('created_at', today.toISOString()),
+    const [allRows, todayRows, paywallRows, visitRows, byTool, topVisitors, recent, dailyCounts] = await Promise.all([
+      supabase.from('tool_usage').select('id', { count: 'exact', head: true }).neq('tool', 'paywall').neq('tool', 'visit'),
+      supabase.from('tool_usage').select('id', { count: 'exact', head: true }).neq('tool', 'paywall').neq('tool', 'visit').gte('created_at', today.toISOString()),
       supabase.from('tool_usage').select('id', { count: 'exact', head: true }).eq('tool', 'paywall'),
+      supabase.from('tool_usage').select('id', { count: 'exact', head: true }).eq('tool', 'visit'),
       supabase.rpc('get_by_tool'),
       supabase.rpc('get_top_visitors'),
       supabase.from('tool_usage').select('tool, ip_address, location, is_admin, session_id, created_at').order('created_at', { ascending: false }).limit(20),
@@ -316,6 +323,7 @@ app.get('/api/admin/stats', async (req, res) => {
       total: allRows.count || 0,
       today: todayRows.count || 0,
       paywallHits: paywallRows.count || 0,
+      totalVisits: visitRows.count || 0,
       uniqueVisitors: uniqueIPs,
       uniqueSessions,
       byTool: byTool.data || [],

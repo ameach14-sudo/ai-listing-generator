@@ -61,7 +61,7 @@
 
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 16px;
       margin-bottom: 24px;
     }
@@ -262,7 +262,7 @@
 
     .loading { color: var(--muted); font-size: 0.9rem; text-align: center; padding: 20px; }
 
-    @media (max-width: 600px) {
+    @media (max-width: 700px) {
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
@@ -302,7 +302,8 @@
 
     <div class="container">
       <div class="stats-grid" id="stats-grid">
-        <div class="stat-card"><div class="number" id="stat-total">—</div><div class="label">Total Generations</div></div>
+        <div class="stat-card"><div class="number" id="stat-visits">—</div><div class="label">Total Visits</div></div>
+        <div class="stat-card"><div class="number" id="stat-total">—</div><div class="label">Generations</div></div>
         <div class="stat-card"><div class="number" id="stat-today">—</div><div class="label">Today</div></div>
         <div class="stat-card"><div class="number" id="stat-sessions">—</div><div class="label">Unique Sessions</div></div>
         <div class="stat-card"><div class="number" id="stat-paywall" style="color:#e57373;">—</div><div class="label">Paywall Hits</div></div>
@@ -356,6 +357,7 @@
         const data = await res.json();
 
         // Stat cards
+        document.getElementById('stat-visits').textContent = data.totalVisits;
         document.getElementById('stat-total').textContent = data.total;
         document.getElementById('stat-today').textContent = data.today;
         document.getElementById('stat-sessions').textContent = data.uniqueSessions;
